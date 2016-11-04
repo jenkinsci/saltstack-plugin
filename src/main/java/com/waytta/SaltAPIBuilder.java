@@ -131,6 +131,10 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
     public String getPillarvalue() {
     	return clientInterface.getPillarvalue();
     }
+    
+    public String getSubset() {
+    	return clientInterface.getSubset();
+    }
 
     public String getCredentialsId() {
         return credentialsId;
@@ -357,20 +361,28 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
                                            String mykwarguments) throws IOException, InterruptedException {
         JSONObject saltFunc = new JSONObject();
         saltFunc.put("client", myClientInterface);
-        if (myClientInterface.equals("local_batch")) {
-            String mybatch = Utils.paramorize(build, listener, getBatchSize());
+
+        switch (myClientInterface) {
+        case "local_batch":
+        	String mybatch = Utils.paramorize(build, listener, getBatchSize());
             saltFunc.put("batch", mybatch);
             listener.getLogger().println("Running in batch mode. Batch size: " + mybatch);
-        }
-        if (myClientInterface.equals("runner")) {
-            saltFunc.put("mods", getMods());
-
+            break;
+        case "runner":
+        	saltFunc.put("mods", getMods());
             String myPillarvalue = Utils.paramorize(build, listener, getPillarvalue());
             JSONObject jPillar = new JSONObject();
             // If value was already a jsonobject, treat it as such
             JSON runPillarValue = JSONSerializer.toJSON(myPillarvalue);
             saltFunc.put("pillar", runPillarValue);
+            break;
+        case "local_subset":
+        	String mySubset = Utils.paramorize(build, listener, getSubset());
+        	saltFunc.put("sub", Integer.parseInt(mySubset));
+            listener.getLogger().println("Running in subset mode. Subset size: " + mySubset);
+            break;
         }
+
         saltFunc.put("tgt", mytarget);
         saltFunc.put("expr_form", getTargettype());
         saltFunc.put("fun", myfunction);

@@ -39,6 +39,9 @@ abstract public class BasicClient implements ExtensionPoint, Describable<BasicCl
 		return "";
 	}
 
+	public String getSubset() {
+		return "1";
+	}
 	
 	public Descriptor<BasicClient> getDescriptor() {
         return Jenkins.getInstance().getDescriptor(getClass());
