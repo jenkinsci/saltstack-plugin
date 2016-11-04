@@ -38,7 +38,7 @@ public class LocalSubsetClient extends BasicClient {
         return targetType;
     }
    
-    @Symbol("local") @Extension
+    @Symbol("subset") @Extension
     public static class DescriptorImpl extends BasicClientDescriptor {
     	public DescriptorImpl() {
             super(LocalSubsetClient.class);
