@@ -22,6 +22,7 @@ import org.yaml.snakeyaml.Yaml;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
+import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
@@ -37,6 +38,7 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -373,14 +375,37 @@ public class SaltAPIBuilder extends Builder {
             return FormValidation.warning("Cannot expand parametrized server name.");
         }
 
-        public static StandardListBoxModel doFillCredentialsIdItems(
-                @AncestorInPath Jenkins context,
+        public static ListBoxModel doFillCredentialsIdItems(
+        		@QueryParameter String credentialsId,
                 @QueryParameter final String servername) {
+        	if (!Jenkins.getInstance().hasPermission(Jenkins.ADMINISTER)){
+        		return new StandardListBoxModel().includeCurrentValue(credentialsId);
+        	}
+        	List<DomainRequirement> requirements = URIRequirementBuilder.create().build();
+        	return new StandardListBoxModel()
+        			.includeEmptyValue()
+        			.includeMatchingAs(
+        					ACL.SYSTEM,
+        					Jenkins.getInstance(),
+        					StandardUsernamePasswordCredentials.class,
+        					requirements,
+        					CredentialsMatchers.always()
+        					)
+        			.includeMatchingAs(
+        					Jenkins.getAuthentication(),
+        					Jenkins.getInstance(),
+        					StandardUsernamePasswordCredentials.class,
+        					requirements,
+        					CredentialsMatchers.always()
+        					);
+        	
+        	/*
             StandardListBoxModel result = new StandardListBoxModel();
             result.withEmptySelection();
             result.withMatching(CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class),
                     Utils.getCredentials(context));
             return result;
+            */
         }
 
         public static FormValidation doCheckServername(@QueryParameter String value) {

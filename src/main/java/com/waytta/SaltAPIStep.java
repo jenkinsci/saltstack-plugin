@@ -22,7 +22,7 @@ import hudson.model.Result;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
-
+import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -151,10 +151,10 @@ public class SaltAPIStep extends AbstractStepImpl {
         	return SaltAPIBuilder.DescriptorImpl.doCheckServername(value);
         }
         
-        public StandardListBoxModel doFillCredentialsIdItems(
-                @AncestorInPath Jenkins context,
+        public ListBoxModel doFillCredentialsIdItems(
+        		@QueryParameter final String credentialsId,
                 @QueryParameter final String servername) {
-            return SaltAPIBuilder.DescriptorImpl.doFillCredentialsIdItems(context, servername);
+            return SaltAPIBuilder.DescriptorImpl.doFillCredentialsIdItems(credentialsId, servername);
         }
         
         public FormValidation doCheckCredentialsId(@AncestorInPath Item project, @QueryParameter String value) {
