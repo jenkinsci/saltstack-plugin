@@ -12,7 +12,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
 
-
 import com.waytta.clientinterface.BasicClient;
 import com.waytta.clientinterface.LocalBatchClient;
 import com.waytta.clientinterface.LocalClient;
@@ -28,6 +27,10 @@ import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 
 import hudson.model.Item;
+import hudson.model.Queue;
+import hudson.model.Result;
+import hudson.model.queue.Tasks;
+import hudson.model.Job;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -39,14 +42,18 @@ import hudson.tasks.Builder;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import hudson.model.queue.Tasks;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.AncestorInPath;
+import org.kohsuke.stapler.Stapler;
 
 import jenkins.model.Jenkins;
+import java.util.Collections;
+
 import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSON;
 import net.sf.json.JSONArray;
@@ -155,8 +162,8 @@ public class SaltAPIBuilder extends Builder {
     }
 
 
-    public boolean perform(Run build, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
-        String myOutputFormat = getDescriptor().getOutputFormat();
+    public boolean perform(Run<?, ?> build, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
+    	String myOutputFormat = getDescriptor().getOutputFormat();
         String myClientInterface = clientInterface.getDescriptor().getDisplayName();
         String myservername = Utils.paramorize(build, listener, servername);
         String mytarget = Utils.paramorize(build, listener, getTarget());
@@ -166,7 +173,27 @@ public class SaltAPIBuilder extends Builder {
         boolean myBlockBuild = getBlockbuild();
         boolean jobSuccess = true;
 
-        StandardUsernamePasswordCredentials credential = Utils.getCredentialById(getCredentialsId());
+        /*
+        StandardUsernamePasswordCredentials credential = CredentialsProvider.findCredentialById(
+        		getCredentialsId(), StandardUsernamePasswordCredentials.class, build);
+        		*/
+        
+        Item item = Stapler.getCurrentRequest().findAncestorObject(Item.class);
+    	StandardUsernamePasswordCredentials credential = null;
+    	
+    	/*
+    	for (StandardUsernamePasswordCredentials c : CredentialsProvider.lookupCredentials(
+    			StandardUsernamePasswordCredentials.class,
+    			item,
+    			null,
+    			Collections.<DomainRequirement>emptyList())) {
+    		if (c.getId().equals(credentialsId)) {
+    			credential = c;
+    			break;
+    		}
+    	}
+    	*/
+
         if (credential == null) {
             listener.error("Invalid credentials");
             return false;
@@ -345,25 +372,26 @@ public class SaltAPIBuilder extends Builder {
         public static FormValidation doTestConnection(
                 @QueryParameter String servername,
                 @QueryParameter String credentialsId,
-                @QueryParameter String authtype) {
-            StandardUsernamePasswordCredentials usedCredential = null;
-            List<StandardUsernamePasswordCredentials> credentials = Utils.getCredentials(Jenkins.getInstance());
-            for (StandardUsernamePasswordCredentials credential : credentials) {
-                if (credential.getId().equals(credentialsId)) {
-                    usedCredential = credential;
-                    break;
-                }
-            }
-
+                @QueryParameter String authtype,
+        		@AncestorInPath Item project) {            	
+        	StandardUsernamePasswordCredentials usedCredential = null;
+        	for (StandardUsernamePasswordCredentials c : CredentialsProvider.lookupCredentials(
+        			StandardUsernamePasswordCredentials.class,
+        			project,
+        			null,
+        			Collections.<DomainRequirement>emptyList())) {
+        		if (c.getId().equals(credentialsId)) {
+        			usedCredential = c;
+        			break;
+        		}
+        	}
+            
             if (usedCredential == null) {
                 return FormValidation.error("CredentialId error: no credential found with given ID.");
             }
 
             if (!servername.matches("\\{\\{\\w+\\}\\}")) {
-                JSONObject auth = new JSONObject();
-                auth.put("username", usedCredential.getUsername());
-                auth.put("password", usedCredential.getPassword().getPlainText());
-                auth.put("eauth", authtype);
+            	JSONObject auth = Utils.createAuthArray(usedCredential, authtype);
                 String token = Utils.getToken(servername, auth);
                 if (token.contains("Error")) {
                     return FormValidation.error("Client error: " + token);
@@ -376,37 +404,18 @@ public class SaltAPIBuilder extends Builder {
         }
 
         public static ListBoxModel doFillCredentialsIdItems(
+        		@AncestorInPath Job context,
         		@QueryParameter String credentialsId,
                 @QueryParameter final String servername) {
-        	if (!Jenkins.getInstance().hasPermission(Jenkins.ADMINISTER)){
-        		return new StandardListBoxModel().includeCurrentValue(credentialsId);
-        	}
-        	List<DomainRequirement> requirements = URIRequirementBuilder.create().build();
-        	return new StandardListBoxModel()
-        			.includeEmptyValue()
-        			.includeMatchingAs(
-        					ACL.SYSTEM,
-        					Jenkins.getInstance(),
-        					StandardUsernamePasswordCredentials.class,
-        					requirements,
-        					CredentialsMatchers.always()
-        					)
-        			.includeMatchingAs(
-        					Jenkins.getAuthentication(),
-        					Jenkins.getInstance(),
-        					StandardUsernamePasswordCredentials.class,
-        					requirements,
-        					CredentialsMatchers.always()
-        					);
-        	
-        	/*
-            StandardListBoxModel result = new StandardListBoxModel();
-            result.withEmptySelection();
-            result.withMatching(CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class),
-                    Utils.getCredentials(context));
-            return result;
-            */
-        }
+                Item item = Stapler.getCurrentRequest().findAncestorObject(Item.class);
+                return new StandardUsernameListBoxModel()
+                        .includeAs(
+                                item instanceof Queue.Task ? Tasks.getAuthenticationOf((Queue.Task)item) : ACL.SYSTEM,
+                                item,
+                        		StandardUsernamePasswordCredentials.class,
+                                Collections.<DomainRequirement>emptyList()
+                        		);
+            }
 
         public static FormValidation doCheckServername(@QueryParameter String value) {
             if (!value.matches("\\{\\{\\w+\\}\\}")) {
@@ -430,7 +439,9 @@ public class SaltAPIBuilder extends Builder {
             return FormValidation.warning("Cannot expand parametrized server name.");
         }
 
-        public static FormValidation doCheckCredentialsId(@AncestorInPath Item project, @QueryParameter String value) {
+        public static FormValidation doCheckCredentialsId(
+        		@AncestorInPath Item project,
+        		@QueryParameter String value) {
             if (project == null || !project.hasPermission(Item.CONFIGURE)) {
                 return FormValidation.ok();
             }
@@ -439,19 +450,19 @@ public class SaltAPIBuilder extends Builder {
                 return FormValidation.ok();
             }
 
-            StandardUsernamePasswordCredentials usedCredential = null;
-            List<StandardUsernamePasswordCredentials> credentials = Utils.getCredentials(Jenkins.getInstance());
-            for (StandardUsernamePasswordCredentials credential : credentials) {
-                if (credential.getId().equals(value)) {
-                    usedCredential = credential;
+            Item item = Stapler.getCurrentRequest().findAncestorObject(Item.class);
+            for (ListBoxModel.Option o : CredentialsProvider.listCredentials(
+            		StandardUsernamePasswordCredentials.class,
+                    project,
+                    item instanceof Queue.Task ? Tasks.getAuthenticationOf((Queue.Task)item) : ACL.SYSTEM,
+                    Collections.<DomainRequirement>emptyList(),
+                    CredentialsMatchers
+                            .instanceOf(StandardUsernamePasswordCredentials.class))) {
+                if (value.equals(o.value)) {
+                    return FormValidation.ok();
                 }
             }
-
-            if (usedCredential == null) {
-                return FormValidation.error("Cannot find any credentials with id " + value);
-            }
-
-            return FormValidation.ok();
+            return FormValidation.error("Cannot find any credentials with id " + value);
         }
 
         public FormValidation doCheckPollTime(@QueryParameter String value) {

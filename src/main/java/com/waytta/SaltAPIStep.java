@@ -3,6 +3,7 @@ package com.waytta;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.Collections;
 import javax.inject.Inject;
 
 import hudson.model.Run;
@@ -18,6 +19,7 @@ import org.kohsuke.stapler.QueryParameter;
 
 import hudson.Extension;
 import hudson.model.Item;
+import hudson.model.Job;
 import hudson.model.Result;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
@@ -27,6 +29,7 @@ import jenkins.model.Jenkins;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
+import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
@@ -152,9 +155,10 @@ public class SaltAPIStep extends AbstractStepImpl {
         }
         
         public ListBoxModel doFillCredentialsIdItems(
+        		@AncestorInPath Job context,
         		@QueryParameter final String credentialsId,
                 @QueryParameter final String servername) {
-            return SaltAPIBuilder.DescriptorImpl.doFillCredentialsIdItems(credentialsId, servername);
+            return SaltAPIBuilder.DescriptorImpl.doFillCredentialsIdItems(context, credentialsId, servername);
         }
         
         public FormValidation doCheckCredentialsId(@AncestorInPath Item project, @QueryParameter String value) {
@@ -164,8 +168,9 @@ public class SaltAPIStep extends AbstractStepImpl {
         public FormValidation doTestConnection(
                 @QueryParameter String servername,
                 @QueryParameter String credentialsId,
-                @QueryParameter String authtype) {
-        	return SaltAPIBuilder.DescriptorImpl.doTestConnection(servername, credentialsId, authtype);
+                @QueryParameter String authtype,
+                @AncestorInPath Item project) {
+        	return SaltAPIBuilder.DescriptorImpl.doTestConnection(servername, credentialsId, authtype, project);
         }
     }
     
@@ -174,7 +179,7 @@ public class SaltAPIStep extends AbstractStepImpl {
         private transient SaltAPIStep saltStep;
         
     	@StepContextParameter
-        private transient Run run;
+        private transient Run<?, ?> run;
 
         @StepContextParameter
         private transient TaskListener listener;
@@ -183,12 +188,13 @@ public class SaltAPIStep extends AbstractStepImpl {
         protected String run() throws Exception {
     		SaltAPIBuilder saltBuilder = new SaltAPIBuilder(saltStep.servername, saltStep.authtype, saltStep.clientInterface, saltStep.credentialsId);
 
-            StandardUsernamePasswordCredentials credential = Utils.getCredentialById(saltBuilder.getCredentialsId());
+            StandardUsernamePasswordCredentials credential = CredentialsProvider.findCredentialById(
+            		saltBuilder.getCredentialsId(), StandardUsernamePasswordCredentials.class, run);
             if (credential == null) {
                 listener.error("Invalid credentials");
         		run.setResult(Result.FAILURE);
             }
-            
+                        
             // Setup connection for auth
     	    JSONObject auth = Utils.createAuthArray(credential, saltBuilder.getAuthtype());
 

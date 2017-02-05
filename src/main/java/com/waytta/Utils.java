@@ -287,20 +287,4 @@ public class Utils {
 
         return auth;
     }
-    
-    static StandardUsernamePasswordCredentials getCredentialById(String credentialId) {
-        List<StandardUsernamePasswordCredentials> credentials = getCredentials(Jenkins.getInstance());
-        for (StandardUsernamePasswordCredentials credential : credentials) {
-            if (credential.getId().equals(credentialId)) {
-                return credential;
-            }
-        }
-        return null;
-    }
-
-    static List<StandardUsernamePasswordCredentials> getCredentials(Jenkins context) {
-        List<DomainRequirement> requirements = URIRequirementBuilder.create().build();
-        List<StandardUsernamePasswordCredentials> credentials = CredentialsProvider.lookupCredentials(StandardUsernamePasswordCredentials.class, context, ACL.SYSTEM, requirements);
-        return credentials;
-    }
 }
