@@ -19,6 +19,7 @@ import org.kohsuke.stapler.QueryParameter;
 
 import hudson.Extension;
 import hudson.model.Item;
+import hudson.model.Executor;
 import hudson.model.Job;
 import hudson.model.Result;
 import hudson.tasks.BuildStepDescriptor;
@@ -40,9 +41,6 @@ public class SaltAPIStep extends AbstractStepImpl {
 
     private String servername;
     private String authtype;
-    private String function;
-    private String arguments;
-    private String kwarguments;
     private BasicClient clientInterface;
     private boolean saveEnvVar = false;
     private final String credentialsId;
@@ -138,7 +136,6 @@ public class SaltAPIStep extends AbstractStepImpl {
         public DescriptorImpl() {
         	super(SaltAPIStepExecution.class);
         }
-        
 
         @Override
         public String getFunctionName() {
@@ -192,9 +189,10 @@ public class SaltAPIStep extends AbstractStepImpl {
             		saltBuilder.getCredentialsId(), StandardUsernamePasswordCredentials.class, run);
             if (credential == null) {
                 listener.error("Invalid credentials");
-        		run.setResult(Result.FAILURE);
+                run.setResult(Result.FAILURE);
+                return null;
             }
-                        
+
             // Setup connection for auth
     	    JSONObject auth = Utils.createAuthArray(credential, saltBuilder.getAuthtype());
 
@@ -203,7 +201,8 @@ public class SaltAPIStep extends AbstractStepImpl {
     	    token = Utils.getToken(saltBuilder.getServername(), auth);
     	    if (token.contains("Error")) {
     	        listener.error(token);
-    	        run.setResult(Result.FAILURE);
+                run.setResult(Result.FAILURE);
+                return null;
     	    }
     	    
     	    // If we got this far, auth must have been good and we've got a token
@@ -217,7 +216,7 @@ public class SaltAPIStep extends AbstractStepImpl {
             boolean validFunctionExecution = Utils.validateFunctionCall(returnArray);
             if (!validFunctionExecution) {
                 listener.error("One or more minion did not return code 0\n");
-    	        run.setResult(Result.FAILURE);
+                run.setResult(Result.FAILURE);
             }
             
     		return returnArray.toString();

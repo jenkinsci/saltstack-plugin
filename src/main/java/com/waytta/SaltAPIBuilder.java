@@ -10,7 +10,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.annotation.Nonnull;
 
 import com.waytta.clientinterface.BasicClient;
 import com.waytta.clientinterface.LocalBatchClient;
@@ -20,10 +19,8 @@ import org.yaml.snakeyaml.Yaml;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
-import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
-import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 
 import hudson.model.Item;
@@ -42,7 +39,6 @@ import hudson.tasks.Builder;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
-import hudson.model.queue.Tasks;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -62,21 +58,21 @@ import net.sf.json.JSONSerializer;
 import net.sf.json.JSONObject;
 import net.sf.json.util.JSONUtils;
 
-public class SaltAPIBuilder extends Builder {
+public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
     private static final Logger LOGGER = Logger.getLogger("com.waytta.saltstack");
 
-    private @Nonnull String servername;
-    private @Nonnull String authtype;
+    private String servername;
+    private String authtype;
     private String function;
     private String arguments;
     private String kwarguments;
     private BasicClient clientInterface;
     private boolean saveEnvVar = false;
-    private final @Nonnull String credentialsId;
+    private final String credentialsId;
 
 
     @DataBoundConstructor
-    public SaltAPIBuilder(@Nonnull String servername, String authtype, BasicClient clientInterface, @Nonnull String credentialsId) {
+    public SaltAPIBuilder(String servername, String authtype, BasicClient clientInterface, String credentialsId) {
         this.servername = servername;
         this.authtype = authtype;
         this.clientInterface = clientInterface;
@@ -161,7 +157,14 @@ public class SaltAPIBuilder extends Builder {
     	return clientInterface.getTag();
     }
 
-
+    @Override
+    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
+    	boolean success = perform(run, launcher, listener);
+    	if (!success) {
+    		throw new InterruptedException();
+    	}
+    }
+    
     public boolean perform(Run<?, ?> build, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
     	String myOutputFormat = getDescriptor().getOutputFormat();
         String myClientInterface = clientInterface.getDescriptor().getDisplayName();
@@ -173,26 +176,8 @@ public class SaltAPIBuilder extends Builder {
         boolean myBlockBuild = getBlockbuild();
         boolean jobSuccess = true;
 
-        /*
         StandardUsernamePasswordCredentials credential = CredentialsProvider.findCredentialById(
         		getCredentialsId(), StandardUsernamePasswordCredentials.class, build);
-        		*/
-        
-        Item item = Stapler.getCurrentRequest().findAncestorObject(Item.class);
-    	StandardUsernamePasswordCredentials credential = null;
-    	
-    	/*
-    	for (StandardUsernamePasswordCredentials c : CredentialsProvider.lookupCredentials(
-    			StandardUsernamePasswordCredentials.class,
-    			item,
-    			null,
-    			Collections.<DomainRequirement>emptyList())) {
-    		if (c.getId().equals(credentialsId)) {
-    			credential = c;
-    			break;
-    		}
-    	}
-    	*/
 
         if (credential == null) {
             listener.error("Invalid credentials");
@@ -319,7 +304,9 @@ public class SaltAPIBuilder extends Builder {
 		saltFunc.put("tgt", mytarget);
 		saltFunc.put("expr_form", getTargettype());
 		saltFunc.put("fun", myfunction);
-		Builds.addArgumentsToSaltFunction(myarguments, saltFunc);
+		if (myarguments != null) {
+			Builds.addArgumentsToSaltFunction(myarguments, saltFunc);
+		}
 
 		return saltFunc;
 	}
@@ -413,7 +400,7 @@ public class SaltAPIBuilder extends Builder {
                                 item instanceof Queue.Task ? Tasks.getAuthenticationOf((Queue.Task)item) : ACL.SYSTEM,
                                 item,
                         		StandardUsernamePasswordCredentials.class,
-                                Collections.<DomainRequirement>emptyList()
+                        		Collections.<DomainRequirement>emptyList()
                         		);
             }
 

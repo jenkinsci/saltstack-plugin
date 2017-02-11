@@ -140,7 +140,7 @@ public class Builds {
     		httpResponse = Utils.getJSON(myservername + "/jobs/" + jid, null, token);
     		returnArray = httpResponse.getJSONArray("return");
     		numMinionsDone = returnArray.getJSONObject(0).names().size();
-    		if (numMinionsDone > oldMinionsDone && numMinionsDone < numMinions) {
+    		if (numMinionsDone >= oldMinionsDone && numMinionsDone < numMinions) {
     			// Some minions returned, but not all
     			// Give them minionTimeout to all return or fail build
     			try {
@@ -163,6 +163,7 @@ public class Builds {
     				listener.error(
     						"Minions timed out:\n" + minionsArray.toString() + "\n\n");
     	    		build.setResult(Result.FAILURE);
+    	    		return returnArray;
     			}
     		}
     	}
