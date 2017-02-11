@@ -25,7 +25,6 @@ import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 
 import hudson.model.Item;
 import hudson.model.Queue;
-import hudson.model.Result;
 import hudson.model.queue.Tasks;
 import hudson.model.Job;
 import hudson.Extension;

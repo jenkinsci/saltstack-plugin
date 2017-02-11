@@ -3,7 +3,6 @@ package com.waytta;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.Collections;
 import javax.inject.Inject;
 
 import hudson.model.Run;
@@ -19,7 +18,6 @@ import org.kohsuke.stapler.QueryParameter;
 
 import hudson.Extension;
 import hudson.model.Item;
-import hudson.model.Executor;
 import hudson.model.Job;
 import hudson.model.Result;
 import hudson.tasks.BuildStepDescriptor;
