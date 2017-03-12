@@ -31,7 +31,6 @@ import net.sf.json.JSONSerializer;
 
 import hudson.util.FormValidation;
 
-
 public class Utils {
     private static final String RETCODE_FIELD_NAME = "retcode";
 
@@ -121,7 +120,8 @@ public class Utils {
 
     // replaces $string with value of env($string). Used in conjunction with
     // parameterized builds
-    public static String paramorize(Run build, TaskListener listener, String paramer) throws IOException, InterruptedException {
+    public static String paramorize(Run build, TaskListener listener, String paramer)
+            throws IOException, InterruptedException {
         Pattern pattern = Pattern.compile("\\{\\{\\w+\\}\\}");
         Matcher matcher = pattern.matcher(paramer);
         while (matcher.find()) {
@@ -144,33 +144,36 @@ public class Utils {
 
     public static boolean validateFunctionCall(JSONArray returnArray) {
         boolean result = true;
-        
-        // Salt's /hook url returns non standard response. Assume this response is valid
+
+        // Salt's /hook url returns non standard response. Assume this response
+        // is valid
         JSONArray successHook = JSONArray.fromObject("[{\"Success\": True}]");
         if (returnArray.equals(successHook)) {
-        	return true;
+            return true;
         }
-        
+
         try {
-        	if (returnArray.get(0).toString().contains("TypeError")) {
-        		return false;
-        	} else if (returnArray.get(0).toString().contains("ERROR")) {
-        		return false;
-        	} else if (returnArray.get(0).toString().contains(" is not available.")) {
-        		// detect [{"minionname":"'functionname' is not available."}]
-        		return false;
-        	} else if (returnArray.getJSONObject(0).has("Error")) {
-        		// detect [{"Error": ...
-        		return false;
-        	}
-        } catch (Exception e) {}
-        
+            if (returnArray.get(0).toString().contains("TypeError")) {
+                return false;
+            } else if (returnArray.get(0).toString().contains("ERROR")) {
+                return false;
+            } else if (returnArray.get(0).toString().contains(" is not available.")) {
+                // detect [{"minionname":"'functionname' is not available."}]
+                return false;
+            } else if (returnArray.getJSONObject(0).has("Error")) {
+                // detect [{"Error": ...
+                return false;
+            }
+        } catch (Exception e) {
+        }
+
         try {
-        	if (returnArray.getJSONArray(0).isArray()) {
-        		// detect runner manage.present result [["minion1", "minion2"...
-        		return true;
-        	}
-        } catch (Exception e) {}
+            if (returnArray.getJSONArray(0).isArray()) {
+                // detect runner manage.present result [["minion1", "minion2"...
+                return true;
+            }
+        } catch (Exception e) {
+        }
 
         for (Object o : returnArray) {
             if (o instanceof Boolean) {
@@ -244,10 +247,10 @@ public class Utils {
 
                 // test if result is false
                 if (jsonObject.has("result")) {
-                    //detect where test=True and results key is "null"
-                    //See test testHighStateChangesTest
+                    // detect where test=True and results key is "null"
+                    // See test testHighStateChangesTest
                     if (jsonObject.get("result").equals("null")) {
-                        //deteced null result, skipping
+                        // deteced null result, skipping
                         break;
                     }
                     result = jsonObject.getBoolean("result");
@@ -266,11 +269,15 @@ public class Utils {
         }
         return result;
     }
-    
+
     public static FormValidation validateFormStringField(String value, String lackOfFieldMessage,
             String fieldToShortMessage) {
         if (value.length() == 0) {
             return FormValidation.error(lackOfFieldMessage);
+        }
+
+        if (value.equals("*")) {
+            return FormValidation.ok();
         }
 
         if (value.length() < 3) {
@@ -279,25 +286,25 @@ public class Utils {
 
         return FormValidation.ok();
     }
-    
+
     public static FormValidation validatePillar(String value) {
-    	// Check to see if paramorized. Ex: {{variable}}
-    	// This cannot be evaluated until build, so trust that all is well
-    	Pattern pattern = Pattern.compile("\\{\\{\\w+\\}\\}");
-    	Matcher matcher = pattern.matcher(value);
-    	if (matcher.matches()) {
-    		return FormValidation.ok();
-    	}
-    	try {
-    		// If value was already a jsonobject, treat it as such
-    		JSONSerializer.toJSON(value);
-    		return FormValidation.ok();
-    	} catch (JSONException e) {
-    		// Otherwise it must have been a string
-    		return FormValidation.error("Requires data in JSON format");
-    	}
+        // Check to see if paramorized. Ex: {{variable}}
+        // This cannot be evaluated until build, so trust that all is well
+        Pattern pattern = Pattern.compile("\\{\\{\\w+\\}\\}");
+        Matcher matcher = pattern.matcher(value);
+        if (matcher.matches()) {
+            return FormValidation.ok();
+        }
+        try {
+            // If value was already a jsonobject, treat it as such
+            JSONSerializer.toJSON(value);
+            return FormValidation.ok();
+        } catch (JSONException e) {
+            // Otherwise it must have been a string
+            return FormValidation.error("Requires data in JSON format");
+        }
     }
-    
+
     public static JSONObject createAuthArray(StandardUsernamePasswordCredentials credential, String authtype) {
         JSONObject auth = new JSONObject();
         auth.put("username", credential.getUsername());

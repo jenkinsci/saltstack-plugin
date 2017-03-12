@@ -1,0 +1,14 @@
+[{
+	"data": {
+		"comment": "User smth has been removed",
+		"name": "smth",
+		"start_time": "08:24:29.462937",
+		"result": true,
+		"duration": 837.302,
+		"__run_num__": 1,
+		"changes": {
+			"smth": "Absent"
+		},
+		"retcode": 0
+	}
+}]

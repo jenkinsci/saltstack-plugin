@@ -1,0 +1,57 @@
+[{
+	"data": {
+		"celery01.mydomain.com": {
+			"dockerng_|-celery-c-celery_task-1-container_|-c-celery_task-1_|-running": {
+				"comment": "Container 'c-celery_task-1' was replaced. Image changed from 'registry.mydomain.com/celery_task:11d77cc6c1a21d84fd06f2abc982faf940ee392d' to 'registry.mydomain.com/celery_task:84ff045f69b25c4143000aa744d771eed7373357'.",
+				"name": "c-celery_task-1",
+				"start_time": "17:29:56.303184",
+				"result": true,
+				"duration": 4973.264,
+				"__run_num__": 1,
+				"changes": {
+					"diff": {
+						"image": {
+							"new": "registry.mydomain.com/celery_task:84ff045f69b25c4143000aa744d771eed7373357",
+							"old": "registry.mydomain.com/celery_task:11d77cc6c1a21d84fd06f2abc982faf940ee392d"
+						}
+					},
+					"removed": ["7913e24c53235f2ecf915ca397ea7e48ef9b4f4245b1cb25e72a96bba506314f"],
+					"added": {
+						"Time_Elapsed": 0.03751707,
+						"Id": "77d2301d0e0735550b9cf535fbac466b611be59ac70f351061c00b77395d1151",
+						"Name": "c-celery_task-1",
+						"Warnings": null
+					}
+				}
+			},
+			"dockerng_|-celery-celery_task-image_|-registry.mydomain.com/celery_task:84ff045f69b25c4143000aa744d771eed7373357_|-image_present": {
+				"comment": "Image 'registry.mydomain.com/celery_task:84ff045f69b25c4143000aa744d771eed7373357' was pulled",
+				"name": "registry.mydomain.com/celery_task:84ff045f69b25c4143000aa744d771eed7373357",
+				"start_time": "17:29:48.444762",
+				"result": true,
+				"duration": 7858.216,
+				"__run_num__": 0,
+				"changes": {
+					"Layers": {
+						"Pulled": [
+							"a3ed95caeb02",
+							"8fb0f56b3447",
+							"0d1cc929b218"
+						],
+						"Already_Pulled": [
+							"4ff201d9f6ac",
+							"a3ed95caeb02",
+							"b4b8389cb98d",
+							"071ee56cce56",
+							"9690bd523008",
+							"c1c4f1a1eb80",
+							"177a932959c7"
+						]
+					},
+					"Status": "Downloaded newer image for registry.mydomain.com/celery_task:84ff045f69b25c4143000aa744d771eed7373357",
+					"Time_Elapsed": 7.8480453
+				}
+			}
+		}
+	}
+}]

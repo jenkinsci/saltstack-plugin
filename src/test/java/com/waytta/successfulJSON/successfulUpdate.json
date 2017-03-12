@@ -1,0 +1,28 @@
+[{
+	"data": {
+		"sql.stg.local": {
+			"postgres_database_|-smth-db_|-smth_|-absent": {
+				"comment": "Database smth has been removed",
+				"name": "smth",
+				"start_time": "08:24:29.253964",
+				"result": true,
+				"duration": 207.749,
+				"__run_num__": 0,
+				"changes": {
+					"smth": "Absent"
+				}
+			},
+			"postgres_user_|-smth-db-user_|-smth_|-absent": {
+				"comment": "User smth has been removed",
+				"name": "smth",
+				"start_time": "08:24:29.462937",
+				"result": true,
+				"duration": 837.302,
+				"__run_num__": 1,
+				"changes": {
+					"smth": "Absent"
+				}
+			}
+		}
+	}
+}]

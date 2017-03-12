@@ -1,0 +1,8 @@
+[{
+	"data": {
+		"minionname": [
+			"Rendering SLS 'base:failures.pillar' failed: Jinja variable 'dict object' has no attribute 'nope'"
+		]
+	},
+	"outputter": "highstate"
+}]

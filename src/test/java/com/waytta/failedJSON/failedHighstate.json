@@ -1,0 +1,27 @@
+[{
+	"data": {
+		"minionname": {
+			"cmd_|-fails_|-/bin/false_|-run": {
+				"__run_num__": 0,
+				"_stamp": "2016-02-23T21:15:55.813678",
+				"changes": {
+					"pid": 16745,
+					"retcode": 1,
+					"stderr": "",
+					"stdout": ""
+				},
+				"comment": "Command \"/bin/false\" run",
+				"duration": 17.302,
+				"fun": "state.sls",
+				"id": "minionname",
+				"jid": "20160223151555485695",
+				"name": "/bin/false",
+				"start_time": "15:15:29.462937",
+				"result": false,
+				"retcode": 2,
+				"return": "Error: cmd.run",
+				"success": false
+			}
+		}
+	}
+}]

@@ -1,0 +1,6 @@
+[{
+	"outputter": "highstate",
+	"data": {
+		"p-3-testmap.pio.tv.ro": ["The function \"state.sls\" is running as PID 0 and was started at 1 with jid 2"]
+	}
+}]
