@@ -195,7 +195,7 @@ public class SaltAPIStep extends AbstractStepImpl {
     	    JSONObject auth = Utils.createAuthArray(credential, saltBuilder.getAuthtype());
 
     	    // Get an auth token
-    	    String token = new String();
+    	    String token = "";
     	    token = Utils.getToken(saltBuilder.getServername(), auth);
     	    if (token.contains("Error")) {
     	        listener.error(token);

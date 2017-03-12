@@ -29,14 +29,14 @@ public class Builds {
                     if (kwString.length > 2) {
                         // kwarg contained more than one =. Let's put the string
                         // back together
-                        String kwFull = new String();
+                        String kwFull = "";
                         for (String kwItem : kwString) {
                             // Ignore the first item as it will remain the key
-                            if (kwItem == kwString[0]) {
+                            if (kwItem.equals(kwString[0])) {
                                 continue;
                             }
                             // add the second item
-                            if (kwItem == kwString[1]) {
+                            if (kwItem.equals(kwString[1])) {
                             	// again remove any wrapping quotes
                                 kwItem = kwItem.replaceAll("(^')|(^\")|('$)|(\"$)", "");
                                 kwFull += kwItem;
@@ -73,7 +73,7 @@ public class Builds {
     public static JSONArray runBlockingBuild(Run build, JSONArray returnArray, String myservername, 
     		String token, JSONObject saltFunc, TaskListener listener, int pollTime, int minionTimeout) throws InterruptedException {
     	JSONObject httpResponse = new JSONObject();
-    	String jid = new String();
+    	String jid = "";
     	// Send request to /minion url. This will give back a jid which we
     	// will need to poll and lookup for completion
     	httpResponse = Utils.getJSON(myservername + "/minions", saltFunc, token);

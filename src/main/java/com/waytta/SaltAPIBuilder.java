@@ -62,9 +62,6 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
 
     private String servername;
     private String authtype;
-    private String function;
-    private String arguments;
-    private String kwarguments;
     private BasicClient clientInterface;
     private boolean saveEnvVar = false;
     private final String credentialsId;
@@ -187,7 +184,7 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
 	    JSONObject auth = Utils.createAuthArray(credential, authtype);
 
 	    // Get an auth token
-	    String token = new String();
+	    String token = "";
 	    token = Utils.getToken(myservername, auth);
 	    if (token.contains("Error")) {
 	        listener.error(token);

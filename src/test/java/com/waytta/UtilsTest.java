@@ -10,6 +10,7 @@ import org.junit.Before;
 
 import net.sf.json.JSONArray;
 import hudson.model.TaskListener;
+import hudson.util.FormValidation;
 import hudson.EnvVars;
 import hudson.model.Run;
 
@@ -17,8 +18,25 @@ import static org.mockito.Mockito.mock;
 import org.mockito.Mock;
 import static org.mockito.Mockito.when;
 
+import org.jvnet.hudson.test.HudsonTestCase;
 
-public class UtilsTest {
+
+
+public class UtilsTest extends HudsonTestCase {
+	@Test
+	public static void testValidPillar() {
+		String value = "{\"key\": \"value\"}";
+		FormValidation formValidation = Utils.validatePillar(value);
+		assertEquals(FormValidation.Kind.OK, formValidation.kind);
+	}
+
+	@Test
+	public static void testInvalidPillar() {
+		String value = "{\"key\": value}";
+		FormValidation formValidation = Utils.validatePillar(value);
+		assertEquals(FormValidation.Kind.ERROR, formValidation.kind);
+	}
+
     @Test
     public void testValidValidateFunctionCall() {
         JSONArray jsonArray = JSONArray.fromObject("[{\"data\": {\"sql.stg.local\": {\n" +

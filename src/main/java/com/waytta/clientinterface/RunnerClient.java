@@ -61,23 +61,7 @@ public class RunnerClient extends BasicClient {
         }
     	
         public FormValidation doCheckPillarvalue(@QueryParameter String value) {
-        	if (value.length() > 0) {
-	        	// Check to see if paramorized. Ex: {{variable}}
-	        	// This cannot be evaluated until build, so trust that all is well
-	        	Pattern pattern = Pattern.compile("\\{\\{\\w+\\}\\}");
-	            Matcher matcher = pattern.matcher(value);
-	            if (matcher.matches()) {
-	            	return FormValidation.ok();
-	            }
-	        	try {
-	                // If value was already a jsonobject, treat it as such
-	                JSON runPillarValue = JSONSerializer.toJSON(value);
-	            } catch (JSONException e) {
-	                // Otherwise it must have been a string
-	            	return FormValidation.error("Pillar should be in JSON format");
-	            }
-        	}
-            return FormValidation.ok();
+        	return Utils.validatePillar(value);
         }
     }
     

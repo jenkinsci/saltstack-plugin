@@ -25,6 +25,7 @@ import hudson.security.ACL;
 import jenkins.model.Jenkins;
 
 import net.sf.json.JSONArray;
+import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
@@ -102,7 +103,7 @@ public class Utils {
     }
 
     public static String getToken(String servername, JSONObject auth) {
-        String token = new String();
+        String token = "";
         JSONObject httpResponse = getJSON(servername + "/login", auth, null);
         try {
             JSONArray returnArray = httpResponse.getJSONArray("return");
@@ -277,6 +278,24 @@ public class Utils {
         }
 
         return FormValidation.ok();
+    }
+    
+    public static FormValidation validatePillar(String value) {
+    	// Check to see if paramorized. Ex: {{variable}}
+    	// This cannot be evaluated until build, so trust that all is well
+    	Pattern pattern = Pattern.compile("\\{\\{\\w+\\}\\}");
+    	Matcher matcher = pattern.matcher(value);
+    	if (matcher.matches()) {
+    		return FormValidation.ok();
+    	}
+    	try {
+    		// If value was already a jsonobject, treat it as such
+    		JSONSerializer.toJSON(value);
+    		return FormValidation.ok();
+    	} catch (JSONException e) {
+    		// Otherwise it must have been a string
+    		return FormValidation.error("Requires data in JSON format");
+    	}
     }
     
     public static JSONObject createAuthArray(StandardUsernamePasswordCredentials credential, String authtype) {
