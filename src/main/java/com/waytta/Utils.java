@@ -12,6 +12,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import jenkins.security.MasterToSlaveCallable;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
@@ -19,6 +20,7 @@ import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 
 import hudson.EnvVars;
+import hudson.Launcher;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.security.ACL;
@@ -34,76 +36,9 @@ import hudson.util.FormValidation;
 public class Utils {
     private static final String RETCODE_FIELD_NAME = "retcode";
 
-    // Thinger to connect to saltmaster over rest interface
-    public static JSONObject getJSON(String targetURL, JSONObject urlParams, String auth) {
-        HttpURLConnection connection = null;
-        JSONObject responseJSON = new JSONObject();
-
-        try {
-            // Create connection
-            URL url = new URL(targetURL);
-            connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestProperty("Accept", "application/json");
-            connection.setUseCaches(false);
-            if (urlParams != null && !urlParams.isEmpty()) {
-                // We have stuff to send, so do an HTTP POST not GET
-                connection.setDoOutput(true);
-                connection.setRequestProperty("Content-Type", "application/json");
-
-            }
-            connection.setConnectTimeout(5000); // set timeout to 5 seconds
-            if (auth != null && !auth.isEmpty()) {
-                connection.setRequestProperty("X-Auth-Token", auth);
-            }
-
-            // Send request
-            if (urlParams != null && !urlParams.isEmpty()) {
-                // only necessary if we have stuff to send
-                DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
-                wr.writeBytes(urlParams.toString());
-                wr.flush();
-                wr.close();
-            }
-
-            // Get Response
-            InputStream is = connection.getInputStream();
-            BufferedReader rd = new BufferedReader(new InputStreamReader(is));
-            String line;
-            StringBuffer response = new StringBuffer();
-            while ((line = rd.readLine()) != null) {
-                response.append(line);
-                response.append('\r');
-            }
-            rd.close();
-            String responseText = response.toString();
-            if (responseText.contains("java.io.IOException")
-                    || responseText.contains("java.net.SocketTimeoutException")) {
-                responseJSON.put("Error", responseText);
-                return responseJSON;
-            }
-            try {
-                // Server response should be json so this should work
-                responseJSON = (JSONObject) JSONSerializer.toJSON(responseText);
-                return responseJSON;
-            } catch (Exception e) {
-                responseJSON.put("Error", e);
-                return responseJSON;
-            }
-        } catch (Exception e) {
-            StringWriter errors = new StringWriter();
-            e.printStackTrace(new PrintWriter(errors));
-            responseJSON.put("Error", errors.toString());
-            return responseJSON;
-        } finally {
-            if (connection != null) {
-                connection.disconnect();
-            }
-        }
-    }
-
-    public static String getToken(String servername, JSONObject auth) {
+    public static String getToken(Launcher launcher, String servername, JSONObject auth) throws InterruptedException, IOException {
         String token = "";
-        JSONObject httpResponse = getJSON(servername + "/login", auth, null);
+        JSONObject httpResponse = launcher.getChannel().call(new saltAPI(servername + "/login", auth, null));
         try {
             JSONArray returnArray = httpResponse.getJSONArray("return");
             for (Object o : returnArray) {

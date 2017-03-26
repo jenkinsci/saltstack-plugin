@@ -4,6 +4,10 @@ import hudson.model.Run;
 import hudson.model.Result;
 import hudson.model.TaskListener;
 
+import java.io.IOException;
+
+import hudson.Launcher;
+
 import net.sf.json.JSON;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONException;
@@ -70,13 +74,13 @@ public class Builds {
     }
     
 
-    public static JSONArray runBlockingBuild(Run build, JSONArray returnArray, String myservername, 
-    		String token, JSONObject saltFunc, TaskListener listener, int pollTime, int minionTimeout) throws InterruptedException {
+    public static JSONArray runBlockingBuild(Launcher launcher, Run build, JSONArray returnArray, String myservername, 
+    		String token, JSONObject saltFunc, TaskListener listener, int pollTime, int minionTimeout) throws IOException, InterruptedException {
     	JSONObject httpResponse = new JSONObject();
     	String jid = "";
     	// Send request to /minion url. This will give back a jid which we
     	// will need to poll and lookup for completion
-    	httpResponse = Utils.getJSON(myservername + "/minions", saltFunc, token);
+    	httpResponse = launcher.getChannel().call(new saltAPI(myservername + "/minions", saltFunc, token));
     	try {
     		returnArray = httpResponse.getJSONArray("return");
     		for (Object o : returnArray) {
@@ -94,7 +98,7 @@ public class Builds {
     	int numMinions = 0;
     	int numMinionsDone = 0;
     	JSONArray minionsArray = new JSONArray();
-    	httpResponse = Utils.getJSON(myservername + "/jobs/" + jid, null, token);
+    	httpResponse = launcher.getChannel().call(new saltAPI(myservername + "/jobs/" + jid, null, token));
     	try {
     		// info array will tell us how many minions were targeted
     		returnArray = httpResponse.getJSONArray("info");
@@ -136,7 +140,7 @@ public class Builds {
     			// Allow user to cancel job in jenkins interface
     			throw new InterruptedException();
     		}
-    		httpResponse = Utils.getJSON(myservername + "/jobs/" + jid, null, token);
+    		httpResponse = launcher.getChannel().call(new saltAPI(myservername + "/jobs/" + jid, null, token));
     		returnArray = httpResponse.getJSONArray("return");
     		numMinionsDone = returnArray.getJSONObject(0).names().size();
     		if (numMinionsDone > 0 && numMinionsDone < numMinions) {
@@ -151,7 +155,7 @@ public class Builds {
     				// Allow user to cancel job in jenkins interface
     				throw new InterruptedException();
     			}
-    			httpResponse = Utils.getJSON(myservername + "/jobs/" + jid, null, token);
+    			httpResponse = launcher.getChannel().call(new saltAPI(myservername + "/jobs/" + jid, null, token));
     			returnArray = httpResponse.getJSONArray("return");
     			numMinionsDone = returnArray.getJSONObject(0).names().size();
     			if (numMinionsDone < numMinions) {

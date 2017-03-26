@@ -4,6 +4,7 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import hudson.Launcher;
+import hudson.remoting.Callable;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.security.ACL;
@@ -146,10 +147,10 @@ public class SaltAPIBuilderTest {
         when(mockCred.getId()).thenReturn(DEFAULT_CREDENTIAL_ID);
         when(mockCred.getPassword()).thenReturn(DEFAULT_CREDENTIAL_PASSWORD);
         credentials.add(mockCred);
-
+        
         SaltAPIBuilder builder = setupBuilderForDefaultPerform();
         mockStatic(Utils.class);
-        when(Utils.getToken(anyString(), any(JSONObject.class))).thenReturn("okie_dokie");
+        when(Utils.getToken(any(Launcher.class), anyString(), any(JSONObject.class))).thenReturn("okie_dokie");
 
         BuildListener buildListener = mock(BuildListener.class);
         PrintStream printer = mock(PrintStream.class);
@@ -161,7 +162,7 @@ public class SaltAPIBuilderTest {
         //when(Utils.paramorize(jenkinsBuild, buildListener, builder.getFunction())).thenReturn("junit_myfunction");
         //when(Utils.paramorize(jenkinsBuild, buildListener, builder.getArguments())).thenReturn("junit_myarguments");
         JSONObject httpResponse = mock(JSONObject.class);
-        when(Utils.getJSON(anyString(), any(JSONObject.class),anyString())).thenReturn(httpResponse);
+        //when(launcher.getChannel().call(new saltAPI(anyString(), any(JSONObject.class),anyString()))).thenReturn(httpResponse);
         when(httpResponse.toString(2)).thenReturn("junit_httpResponse");
         JSONArray returnArray = new JSONArray();
         returnArray.add(0,"junit");

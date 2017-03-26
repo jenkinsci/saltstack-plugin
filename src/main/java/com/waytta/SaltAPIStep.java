@@ -1,5 +1,6 @@
 package com.waytta;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -17,6 +18,7 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
 import hudson.Extension;
+import hudson.Launcher;
 import hudson.model.Item;
 import hudson.model.Job;
 import hudson.model.Result;
@@ -164,7 +166,7 @@ public class SaltAPIStep extends AbstractStepImpl {
                 @QueryParameter String servername,
                 @QueryParameter String credentialsId,
                 @QueryParameter String authtype,
-                @AncestorInPath Item project) {
+                @AncestorInPath Item project) throws InterruptedException, IOException {
         	return SaltAPIBuilder.DescriptorImpl.doTestConnection(servername, credentialsId, authtype, project);
         }
     }
@@ -178,6 +180,9 @@ public class SaltAPIStep extends AbstractStepImpl {
 
         @StepContextParameter
         private transient TaskListener listener;
+        
+        @StepContextParameter
+        private transient Launcher launcher;
         
     	@Override
         protected String run() throws Exception {
@@ -196,7 +201,7 @@ public class SaltAPIStep extends AbstractStepImpl {
 
     	    // Get an auth token
     	    String token = "";
-    	    token = Utils.getToken(saltBuilder.getServername(), auth);
+    	    token = Utils.getToken(launcher, saltBuilder.getServername(), auth);
     	    if (token.contains("Error")) {
     	        listener.error(token);
                 run.setResult(Result.FAILURE);
@@ -207,7 +212,7 @@ public class SaltAPIStep extends AbstractStepImpl {
     	    JSONObject saltFunc = saltBuilder.prepareSaltFunction(run, listener, saltBuilder.getClientInterface().getDescriptor().getDisplayName(), saltBuilder.getTarget(), saltBuilder.getFunction(), saltBuilder.getArguments());
     	    LOGGER.log(Level.FINE, "Sending JSON: " + saltFunc.toString());
 
-            JSONArray returnArray = saltBuilder.performRequest(run, token, saltBuilder.getServername(), saltFunc, listener, saltBuilder.getBlockbuild());
+            JSONArray returnArray = saltBuilder.performRequest(launcher, run, token, saltBuilder.getServername(), saltFunc, listener, saltBuilder.getBlockbuild());
             LOGGER.log(Level.FINE, "Received response: " + returnArray);
             
             // Check for error and print out results
