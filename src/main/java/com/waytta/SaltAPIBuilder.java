@@ -240,7 +240,6 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
     
 	public JSONArray performRequest(Run build, String token, String serverName, JSONObject saltFunc, TaskListener listener, boolean blockBuild) throws InterruptedException, IOException {
 	    JSONArray returnArray = new JSONArray();
-
 	    JSONObject httpResponse = new JSONObject();
 	    // Access different salt-api endpoints depending on function
 	    if (blockBuild) {
@@ -248,7 +247,8 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
 	        int minionTimeout = getDescriptor().getTimeoutTime();
 	        // poll /minion for response
 	    	returnArray = Builds.runBlockingBuild(build, returnArray, serverName, token, saltFunc, listener, jobPollTime, minionTimeout);
-	    } else if (saltFunc.getString("client").equals("hook")) {
+	    } else if (!saltFunc.has("client")) {
+	        // only hook communications should start with an empty function object
 	    	// publish event to salt event bus to /hook
 	    	String myTag = Utils.paramorize(build, listener, getTag());
 	    	// Cleanup myTag to remove duplicate / and urlencode

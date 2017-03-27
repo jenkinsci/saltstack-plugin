@@ -181,18 +181,22 @@ public class Utils {
             } else if (o instanceof String) {
                 result = false;
             } else {
-                // detect errors like "return":[{"minionname":["Rendering SLS...
-                // failed"]}]
                 JSONObject possibleMinion = JSONObject.fromObject(o);
                 for (Object name : possibleMinion.names()) {
                     Object field = possibleMinion.get(name.toString());
-                    if (field instanceof JSONArray) {
-                        result = false;
-
-                        if (!result) {
-                            return result;
-                        }
+                    
+                    // Match test failedJSON/commandNotAvailable.json 
+                    Pattern notFoundPattern = Pattern.compile(".*/bin/sh: 1: \\w+: not found.*");
+                    Matcher matcher = notFoundPattern.matcher(field.toString());
+                    if (matcher.matches()) {
+                        return false;
                     }
+                    
+                    // detect errors like "return":[{"minionname":["Rendering SLS...
+                    // failed"]}]
+                    if (field instanceof JSONArray) {
+                        return false;
+                    } 
                 }
 
                 // test if normal minion results are a JSONArray which indicates
