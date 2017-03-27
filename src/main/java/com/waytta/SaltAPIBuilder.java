@@ -242,26 +242,26 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
     
 	public JSONArray performRequest(Launcher launcher, Run build, String token, String serverName, JSONObject saltFunc, TaskListener listener, boolean blockBuild) throws InterruptedException, IOException {
 	    JSONArray returnArray = new JSONArray();
-
 	    JSONObject httpResponse = new JSONObject();
 	    // Access different salt-api endpoints depending on function
 	    if (blockBuild) {
-	    	int jobPollTime = getJobPollTime();
-	        int minionTimeout = getDescriptor().getTimeoutTime();
-	        // poll /minion for response
-	    	returnArray = Builds.runBlockingBuild(launcher, build, returnArray, serverName, token, saltFunc, listener, jobPollTime, minionTimeout);
-	    } else if (saltFunc.getString("client").equals("hook")) {
-	    	// publish event to salt event bus to /hook
-	    	String myTag = Utils.paramorize(build, listener, getTag());
-	    	// Cleanup myTag to remove duplicate / and urlencode
-	    	myTag = myTag.replaceAll("^/", "");
-	    	myTag = URLEncoder.encode(myTag, "UTF-8");
-	    	httpResponse = launcher.getChannel().call(new saltAPI(serverName + "/hook/" + myTag, saltFunc, token));
-	    	returnArray.add(httpResponse);
+        int jobPollTime = getJobPollTime();
+        int minionTimeout = getDescriptor().getTimeoutTime();
+        // poll /minion for response
+        returnArray = Builds.runBlockingBuild(launcher, build, returnArray, serverName, token, saltFunc, listener, jobPollTime, minionTimeout);
+	    } else if (!saltFunc.has("client")) {
+        // only hook communications should start with an empty function object
+        // publish event to salt event bus to /hook
+        String myTag = Utils.paramorize(build, listener, getTag());
+        // Cleanup myTag to remove duplicate / and urlencode
+        myTag = myTag.replaceAll("^/", "");
+        myTag = URLEncoder.encode(myTag, "UTF-8");
+        httpResponse = launcher.getChannel().call(new saltAPI(serverName + "/hook/" + myTag, saltFunc, token));
+        returnArray.add(httpResponse);
 	    } else {
-	        // Just send a salt request to /. Don't wait for reply
-	        httpResponse = launcher.getChannel().call(new saltAPI(serverName, saltFunc, token));
-	        returnArray = httpResponse.getJSONArray("return");
+        // Just send a salt request to /. Don't wait for reply
+        httpResponse = launcher.getChannel().call(new saltAPI(serverName, saltFunc, token));
+        returnArray = httpResponse.getJSONArray("return");
 	    }
 	    
 	    return returnArray;
