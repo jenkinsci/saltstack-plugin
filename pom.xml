@@ -10,6 +10,7 @@
     <jenkins.version>1.642.3</jenkins.version>
     <java.level>7</java.level>
     <findbugs.failOnError>false</findbugs.failOnError>
+    <findbugs.excludeFilterFile>src/findbugs/excludesFilter.xml</findbugs.excludeFilterFile>
   </properties>
 
   <artifactId>saltstack</artifactId>
