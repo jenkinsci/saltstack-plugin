@@ -166,7 +166,7 @@ public class SaltAPIStep extends AbstractStepImpl {
                 @QueryParameter String servername,
                 @QueryParameter String credentialsId,
                 @QueryParameter String authtype,
-                @AncestorInPath Item project) throws InterruptedException, IOException {
+                @AncestorInPath Item project) {
         	return SaltAPIBuilder.DescriptorImpl.doTestConnection(servername, credentialsId, authtype, project);
         }
     }

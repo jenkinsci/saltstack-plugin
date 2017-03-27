@@ -359,7 +359,7 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
                 @QueryParameter String servername,
                 @QueryParameter String credentialsId,
                 @QueryParameter String authtype,
-        		@AncestorInPath Item project) throws InterruptedException, IOException {
+        		@AncestorInPath Item project) {
         	StandardUsernamePasswordCredentials usedCredential = null;
         	for (StandardUsernamePasswordCredentials c : CredentialsProvider.lookupCredentials(
         			StandardUsernamePasswordCredentials.class,
@@ -376,13 +376,17 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
                 return FormValidation.error("CredentialId error: no credential found with given ID.");
             }
             
-            Launcher launcher = Hudson.getInstance().createLauncher(TaskListener.NULL);
+            Launcher launcher = Jenkins.getInstance().createLauncher(TaskListener.NULL);
 
             if (!servername.matches("\\{\\{\\w+\\}\\}")) {
             	JSONObject auth = Utils.createAuthArray(usedCredential, authtype);
-                String token = Utils.getToken(launcher, servername, auth);
-                if (token.contains("Error")) {
-                    return FormValidation.error("Client error: " + token);
+            	try {
+            	    String token = Utils.getToken(launcher, servername, auth);
+            	    if (token.contains("Error")) {
+            	        return FormValidation.error("Client error: " + token);
+            	    }
+                } catch (InterruptedException|IOException e) {
+                    return FormValidation.error("Error: Exception running http request");
                 }
 
                 return FormValidation.ok("Success");
