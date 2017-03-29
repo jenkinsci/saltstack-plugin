@@ -38,6 +38,10 @@ abstract public class BasicClient implements ExtensionPoint, Describable<BasicCl
 	public int getJobPollTime() {
 		return 10;
 	}
+
+	public int getMinionTimeout() {
+	    return 30;
+	}
     
 	public String getMods() {
 		return "";

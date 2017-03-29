@@ -58,14 +58,24 @@ public class Builds {
         	                JSON kwJSON = JSONSerializer.toJSON(kwString[1]);
         	                // Rejoin key and json object
         	                fullKwJSON.element(kwString[0], kwJSON);
-        	            } catch (JSONException e) {
-        	                // Otherwise it must have been a string
-                            fullKwJSON.put(kwString[0], kwString[1]);
-        	            }
+        	        	} catch (JSONException e) {
+        	        	    // Otherwise it must have been a string
+        	        	    if (isInteger(kwString[1])) {
+        	        	        fullKwJSON.put(kwString[0], Integer.parseInt(kwString[1]));
+        	        	    } else {
+        	        	        fullKwJSON.put(kwString[0], kwString[1]);
+        	        	    }
+        	        	}
                     }
                 } else {
                 	// Add any args to json message
-                	saltFunc.accumulate("arg", arg);
+                    if (isInteger(arg)) {
+                        // if arg is int, add as int
+                        saltFunc.accumulate("arg", Integer.parseInt(arg));
+                    } else {
+                        // otherwise assume string
+                        saltFunc.accumulate("arg", arg);
+                    }
                 }
             }
             // Now that loops have completed, add kwarg object
@@ -73,6 +83,18 @@ public class Builds {
         }
     }
     
+    private static boolean isInteger(String s) {
+        boolean isInteger = false;
+        try {
+            Integer.parseInt(s);
+            isInteger = true;
+        }
+        catch (NumberFormatException ex) {
+            // s is not an integer
+        }
+        return isInteger;
+    }
+
 
     public static JSONArray runBlockingBuild(Launcher launcher, Run build, JSONArray returnArray, String myservername, 
     		String token, JSONObject saltFunc, TaskListener listener, int pollTime, int minionTimeout) throws IOException, InterruptedException {
@@ -149,7 +171,30 @@ public class Builds {
     			try {
     				listener.getLogger().println(
     						"Some minions returned. Waiting " + minionTimeout + " seconds");
-    				Thread.sleep(minionTimeout * 1000);
+                    int numberChecks = minionTimeout / pollTime;
+                    if (minionTimeout < pollTime || numberChecks == 1) {
+                        // If minionTimeout smaller than pollTime (or they are close),
+                        // sleep minionTimeout and continue on to recheck
+                        Thread.sleep(minionTimeout * 1000);
+                    } else {
+                        // If minionTimeout is larger than pollTime, then check
+                        // every pollTime seconds until minionTimeout.
+                        int numberChecksRemain = minionTimeout % pollTime;
+                        for (int i=0; i<numberChecks; i++) {
+                            httpResponse = launcher.getChannel().call(new saltAPI(myservername + "/jobs/" + jid, null, token));
+                            returnArray = httpResponse.getJSONArray("return");
+                            numMinionsDone = returnArray.getJSONObject(0).names().size();
+                            if (numMinionsDone >= numMinions) {
+                                return returnArray;
+                            }
+                            Thread.sleep(pollTime * 1000);
+                        }
+                        if (numberChecksRemain > 0) {
+                            // If on last iteration of loop, sleep remainder between
+                            // pollTime and minionTimeout to fully reach minionTimeout
+                            Thread.sleep(numberChecksRemain * 1000);
+                        }
+                    }
     			} catch (InterruptedException ex) {
     				Thread.currentThread().interrupt();
     				// Allow user to cancel job in jenkins interface

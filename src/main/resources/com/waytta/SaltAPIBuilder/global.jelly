@@ -8,9 +8,9 @@
       <f:textbox default="10" value="${instance.pollTime}" />
     </f:entry>
     
-    <f:entry title="Timeout" field="timeoutTime"
+    <f:entry title="Minion Timeout" field="minionTimeout"
       description="Default number of seconds to wait before marking non-responding minions unresponsive and failing the build">
-      <f:textbox default="30" value="${instance.timeoutTime}" />
+      <f:textbox default="30" value="${instance.minionTimeout}" />
     </f:entry>
 
     <f:entry title="Display format" description="Configure display of SaltAPI response">

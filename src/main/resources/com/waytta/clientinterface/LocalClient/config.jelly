@@ -1,12 +1,5 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-  <f:entry title="Wait for completion" field="blockbuild" description="Don't just send Salt command, wait for completion.">
-    <f:checkbox/>
-  </f:entry>
-
-  <f:entry title="Poll Time" description="Number of seconds to wait before polling job completion status on jobs waiting for completion">
-    <f:textbox field="jobPollTime" value="${instance.jobPollTime}" checkUrl="'descriptorByName/SaltAPIBuilder/checkPollTime?value='+escape(this.value)"  default="${descriptor.jobPollTime}" />
-  </f:entry>
   
   <f:entry title="Function" field="function">
     <f:textbox default="cmd.run" />
@@ -23,4 +16,31 @@
   <f:entry field="targetType" title="Target Type">
     <f:select />
   </f:entry>
+
+  <f:block>
+    <table>
+      <f:optionalBlock
+      name="blockbuild"
+      title="Wait for completion"
+      description="Don't just send Salt command, wait for completion."
+      checked="${instance.blockbuild}"
+      inline="true"
+      help="/plugin/saltstack/help-blockbuild.html">
+        <f:entry title="Poll Time" description="Number of seconds to wait before polling job completion status on jobs waiting for completion">
+          <f:textbox field="jobPollTime"
+          value="${instance.jobPollTime}"
+          checkUrl="'descriptorByName/SaltAPIBuilder/checkPollTime?value='+escape(this.value)"
+          default="${descriptor.jobPollTime}" />
+        </f:entry>
+
+        <f:entry title="Minion Timeout" description="Number of seconds to wait before marking non-responsive minions">
+          <f:textbox field="minionTimeout"
+          value="${instance.minionTimeout}"
+          checkUrl="'descriptorByName/SaltAPIBuilder/checkMinionTimeout?value='+escape(this.value)"
+          default="${descriptor.minionTimeout}" />
+        </f:entry>
+      </f:optionalBlock>
+    </table>
+  </f:block>
+
 </j:jelly>

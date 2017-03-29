@@ -118,6 +118,10 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
     	return clientInterface.getJobPollTime();
     }
     
+    public int getMinionTimeout() {
+        return clientInterface.getMinionTimeout();
+    }
+
     public String getMods() {
     	return clientInterface.getMods();
     }
@@ -246,7 +250,7 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
 	    // Access different salt-api endpoints depending on function
 	    if (blockBuild) {
         int jobPollTime = getJobPollTime();
-        int minionTimeout = getDescriptor().getTimeoutTime();
+        int minionTimeout = getMinionTimeout();
         // poll /minion for response
         returnArray = Builds.runBlockingBuild(launcher, build, returnArray, serverName, token, saltFunc, listener, jobPollTime, minionTimeout);
 	    } else if (!saltFunc.has("client")) {
@@ -319,7 +323,7 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
         int pollTime = 10;
-        int timeoutTime = 30;
+        int minionTimeout = 30;
         String outputFormat = "json";
 
         public DescriptorImpl() {
@@ -331,11 +335,11 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
             try {
                 // Test that value entered in config is an integer
                 pollTime = formData.getInt("pollTime");
-                timeoutTime = formData.getInt("timeoutTime");
+                minionTimeout = formData.getInt("minionTimeout");
             } catch (Exception e) {
                 // Fall back to default
                 pollTime = 10;
-                timeoutTime = 30;
+                minionTimeout = 30;
             }
             outputFormat = formData.getString("outputFormat");
             save();
@@ -346,8 +350,8 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
             return pollTime;
         }
         
-        public int getTimeoutTime() {
-	        return timeoutTime;
+        public int getMinionTimeout() {
+	        return minionTimeout;
         }
 
         public String getOutputFormat() {
@@ -468,7 +472,7 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
             return FormValidation.ok();
         }
         
-        public FormValidation doCheckTimeoutTime(@QueryParameter String value) {
+        public FormValidation doCheckMinionTimeout(@QueryParameter String value) {
             try {
                 Integer.parseInt(value);
             } catch (NumberFormatException e) {
