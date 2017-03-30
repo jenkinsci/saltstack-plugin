@@ -53,7 +53,6 @@ public class BuildsTest {
 				+ "\"kwarg\":{\"keyword\":\"value=thing\"},"
 				+ "}");
 
-		System.out.println(saltFunc.toString());
         Assert.assertTrue(expectedResult.equals(saltFunc));
 	}
 }
