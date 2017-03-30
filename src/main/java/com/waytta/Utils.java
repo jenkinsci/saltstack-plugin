@@ -90,11 +90,6 @@ public class Utils {
         try {
             if (returnArray.get(0).toString().contains("TypeError")) {
                 return false;
-            } else if (returnArray.get(0).toString().contains("ERROR")) {
-                return false;
-            } else if (returnArray.get(0).toString().contains(" is not available.")) {
-                // detect [{"minionname":"'functionname' is not available."}]
-                return false;
             } else if (returnArray.getJSONObject(0).has("Error")) {
                 // detect [{"Error": ...
                 return false;
@@ -124,6 +119,11 @@ public class Utils {
                     Pattern notFoundPattern = Pattern.compile(".*/bin/sh: 1: \\w+: not found.*");
                     Matcher matcher = notFoundPattern.matcher(field.toString());
                     if (matcher.matches()) {
+                        return false;
+                    }
+
+                    // Match test failedJSON/functionNotAvailable.json
+                    if (field.toString().contains(" is not available.")) {
                         return false;
                     }
                     
