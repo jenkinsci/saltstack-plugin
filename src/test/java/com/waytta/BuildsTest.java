@@ -77,7 +77,6 @@ public class BuildsTest {
                 + "\"kwarg\":{},"
                 + "}");
 
-        System.out.println(saltFunc.toString());
         Assert.assertTrue(expectedResult.equals(saltFunc));
     }
 
