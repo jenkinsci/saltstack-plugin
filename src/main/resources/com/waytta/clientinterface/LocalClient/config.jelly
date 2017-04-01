@@ -33,7 +33,10 @@
           default="${descriptor.jobPollTime}" />
         </f:entry>
 
-        <f:entry title="Minion Timeout" description="Number of seconds to wait before marking non-responsive minions">
+        <f:entry
+        title="Minion Timeout"
+        description="Number of seconds to wait before marking minions non-responsive"
+        help="/plugin/saltstack/help-minionTimeout.html">
           <f:textbox field="minionTimeout"
           value="${instance.minionTimeout}"
           checkUrl="'descriptorByName/SaltAPIBuilder/checkMinionTimeout?value='+escape(this.value)"

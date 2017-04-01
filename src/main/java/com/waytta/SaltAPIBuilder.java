@@ -473,13 +473,15 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
         }
         
         public FormValidation doCheckMinionTimeout(@QueryParameter String value) {
+            String errorText = "Specify a non zero number. Positive numbers fail the build when "
+                    + "reached, negative numbers will timeout minions without failing";
             try {
                 Integer.parseInt(value);
             } catch (NumberFormatException e) {
-                return FormValidation.error("Specify a number larger than 3");
+                return FormValidation.error(errorText);
             }
-            if (Integer.parseInt(value) < 3) {
-                return FormValidation.warning("Specify a number larger than 3");
+            if (Integer.parseInt(value) == 0) {
+                return FormValidation.warning(errorText);
             }
             return FormValidation.ok();
         }

@@ -165,6 +165,14 @@ public class Builds {
             httpResponse = launcher.getChannel().call(new saltAPI(myservername + "/jobs/" + jid, null, token));
             returnArray = httpResponse.getJSONArray("return");
             numMinionsDone = returnArray.getJSONObject(0).names().size();
+
+            // if minionTimeout is negative, still walkthrough the timeout process, but do not fail build
+            boolean timeoutFail = true;
+            if ( minionTimeout < 0) {
+                timeoutFail = false;
+                minionTimeout *= -1;
+            }
+
             if (numMinionsDone > 0 && numMinionsDone < numMinions) {
                 // Some minions returned, but not all
                 // Give them minionTimeout to all return or fail build
@@ -203,7 +211,9 @@ public class Builds {
                     }
                     listener.error(
                             "Minions timed out:\n" + minionsArray.toString() + "\n\n");
-                    build.setResult(Result.FAILURE);
+                    if (timeoutFail) {
+                        build.setResult(Result.FAILURE);
+                    }
                     return returnArray;
                 }
             }
