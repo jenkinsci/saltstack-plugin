@@ -191,7 +191,7 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
 	    JSONObject auth = Utils.createAuthArray(credential, authtype);
 
 	    // Get an auth token
-	    serverToken serverToken = Utils.getToken(launcher, myservername, auth);
+	    ServerToken serverToken = Utils.getToken(launcher, myservername, auth);
 	    String token = serverToken.getToken();
 	    String netapi = serverToken.getServer();
 	    LOGGER.log(Level.FINE, "Discovered netapi: " + netapi);
@@ -261,11 +261,11 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
 	        // Cleanup myTag to remove duplicate / and urlencode
 	        myTag = myTag.replaceAll("^/", "");
 	        myTag = URLEncoder.encode(myTag, "UTF-8");
-	        httpResponse = launcher.getChannel().call(new httpCallable(serverName + "/hook/" + myTag, saltFunc, token));
+	        httpResponse = launcher.getChannel().call(new HttpCallable(serverName + "/hook/" + myTag, saltFunc, token));
 	        returnArray.add(httpResponse);
 	    } else {
 	        // Just send a salt request to /. Don't wait for reply
-	        httpResponse = launcher.getChannel().call(new httpCallable(serverName, saltFunc, token));
+	        httpResponse = launcher.getChannel().call(new HttpCallable(serverName, saltFunc, token));
 	        returnArray = httpResponse.getJSONArray("return");
 	    }
 

@@ -37,7 +37,7 @@ public class Utils {
     public static serverToken getToken(Launcher launcher, String servername, JSONObject auth) throws InterruptedException, IOException {
         String token = "";
         String server = "";
-        JSONObject httpResponse = launcher.getChannel().call(new httpCallable(servername + "/login", auth, null));
+        JSONObject httpResponse = launcher.getChannel().call(new HttpCallable(servername + "/login", auth, null));
         server = httpResponse.getString("server");
         JSONArray returnArray = httpResponse.getJSONArray("return");
             for (Object o : returnArray) {

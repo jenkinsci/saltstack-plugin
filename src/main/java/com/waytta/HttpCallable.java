@@ -15,13 +15,13 @@ import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
 
-class httpCallable extends MasterToSlaveCallable<JSONObject, IOException> {
+class HttpCallable extends MasterToSlaveCallable<JSONObject, IOException> {
     private static final long serialVersionUID = 1L;
     private String targetURL;
     private JSONObject urlParams;
     private String auth;
 
-    public httpCallable(String targetURL, JSONObject urlParams, String auth) {
+    public HttpCallable(String targetURL, JSONObject urlParams, String auth) {
         this.targetURL = targetURL;
         this.urlParams = urlParams;
         this.auth = auth;
@@ -85,7 +85,7 @@ class httpCallable extends MasterToSlaveCallable<JSONObject, IOException> {
     }
 
     private String read(InputStream stream) throws IOException {
-        BufferedReader rdr = new BufferedReader(new InputStreamReader(stream));
+        BufferedReader rdr = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
         String line;
         StringBuffer response = new StringBuffer();
         while ((line = rdr.readLine()) != null) {
