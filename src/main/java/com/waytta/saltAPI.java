@@ -26,7 +26,8 @@ class saltAPI extends MasterToSlaveCallable<JSONObject, IOException> {
         this.urlParams = urlParams;
         this.auth = auth;
     }
-    
+
+    @Override
     public JSONObject call() throws IOException {
         HttpURLConnection connection = null;
         JSONObject responseJSON = new JSONObject();
@@ -37,7 +38,7 @@ class saltAPI extends MasterToSlaveCallable<JSONObject, IOException> {
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestProperty("Accept", "application/json");
             connection.setUseCaches(false);
-            if (urlParams != null && !urlParams.isEmpty()) {
+            if ((urlParams != null && !urlParams.isEmpty()) || targetURL.contains("/hook") ) {
                 // We have stuff to send, so do an HTTP POST not GET
                 connection.setDoOutput(true);
                 connection.setRequestProperty("Content-Type", "application/json");
@@ -49,7 +50,7 @@ class saltAPI extends MasterToSlaveCallable<JSONObject, IOException> {
             }
 
             // Send request
-            if (urlParams != null && !urlParams.isEmpty()) {
+            if ((urlParams != null && !urlParams.isEmpty()) || targetURL.contains("/hook")) {
                 // only necessary if we have stuff to send
                 DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
                 wr.writeBytes(urlParams.toString());

@@ -25,6 +25,7 @@ import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 
 import hudson.model.Item;
 import hudson.model.Queue;
+import hudson.model.Result;
 import hudson.model.queue.Tasks;
 import hudson.model.Job;
 import hudson.Extension;
@@ -76,11 +77,11 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
         this.clientInterface = clientInterface;
         this.credentialsId = credentialsId;
     }
-  
+
     public String getServername() {
         return servername;
     }
-    
+
     @DataBoundSetter
     public void setServername(String servername) {
         this.servername = servername;
@@ -117,7 +118,7 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
     public int getJobPollTime() {
     	return clientInterface.getJobPollTime();
     }
-    
+
     public int getMinionTimeout() {
         return clientInterface.getMinionTimeout();
     }
@@ -125,11 +126,11 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
     public String getMods() {
     	return clientInterface.getMods();
     }
-    
+
     public String getPillarvalue() {
     	return clientInterface.getPillarvalue();
     }
-    
+
     public String getSubset() {
     	return clientInterface.getSubset();
     }
@@ -146,15 +147,15 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
     public boolean getSaveEnvVar() {
         return saveEnvVar;
     }
-    
+
     public BasicClient getClientInterface() {
     	return clientInterface;
     }
-    
+
     public String getPost() {
     	return clientInterface.getPost();
     }
-    
+
     public String getTag() {
     	return clientInterface.getTag();
     }
@@ -163,10 +164,10 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
     public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
     	boolean success = perform(run, launcher, listener);
     	if (!success) {
-    		throw new InterruptedException();
+    	    run.setResult(Result.FAILURE);
     	}
     }
-    
+
     public boolean perform(Run<?, ?> build, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
     	String myOutputFormat = getDescriptor().getOutputFormat();
         String myClientInterface = clientInterface.getDescriptor().getDisplayName();
@@ -174,7 +175,7 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
         String mytarget = Utils.paramorize(build, listener, getTarget());
         String myfunction = Utils.paramorize(build, listener, getFunction());
         String myarguments = Utils.paramorize(build, listener, getArguments());
-        
+
         boolean myBlockBuild = getBlockbuild();
         boolean jobSuccess = true;
 
@@ -196,11 +197,11 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
 	        listener.error(token);
 	        return false;
 	    }
-	    
+
 	    // If we got this far, auth must have been good and we've got a token
 	    JSONObject saltFunc = prepareSaltFunction(build, listener, myClientInterface, mytarget, myfunction, myarguments);
 	    LOGGER.log(Level.FINE, "Sending JSON: " + saltFunc.toString());
-        
+
         JSONArray returnArray = performRequest(launcher, build, token, myservername, saltFunc, listener, myBlockBuild);
         LOGGER.log(Level.FINE, "Received response: " + returnArray);
 
@@ -222,7 +223,7 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
         	listener.getLogger().println("Completed " + myfunction + " " + myarguments);
         	return jobSuccess;
         }
-        
+
         // Print results
         if (myfunction.length() > 0) {listener.getLogger().print("Response on " + myfunction);}
         if (myarguments.length() > 0) {listener.getLogger().print(" " + myarguments);}
@@ -240,10 +241,10 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
             jobSuccess = false;
         }
 
-        // Results now printed. Return success condition 
+        // Results now printed. Return success condition
         return jobSuccess;
     }
-    
+
 	public JSONArray performRequest(Launcher launcher, Run build, String token, String serverName, JSONObject saltFunc, TaskListener listener, boolean blockBuild) throws InterruptedException, IOException {
 	    JSONArray returnArray = new JSONArray();
 	    JSONObject httpResponse = new JSONObject();
@@ -270,7 +271,7 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
 
 	    return returnArray;
     }
-    
+
     public JSONObject prepareSaltFunction(Run build, TaskListener listener, String myClientInterface, String mytarget,
 			String myfunction, String myarguments) throws IOException, InterruptedException {
 		JSONObject saltFunc = new JSONObject();
@@ -297,10 +298,15 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
 			listener.getLogger().println("Running in subset mode. Subset size: " + mySubset);
 			break;
 		case "hook":
-			// Posting to /hook url should only contain object to be posted
-			String myPost = Utils.paramorize(build, listener, getPost());
-			saltFunc = JSONObject.fromObject(myPost);
-			return saltFunc;
+		    // Posting to /hook url should only contain object to be posted
+		    String myPost = Utils.paramorize(build, listener, getPost());
+		    saltFunc = JSONObject.fromObject(myPost);
+		    if (myPost.length() == 0) {
+		        saltFunc = JSONObject.fromObject("{}");
+		    } else {
+		        saltFunc = JSONObject.fromObject(myPost);
+		    }
+		    return saltFunc;
 		}
 
 		saltFunc.put("tgt", mytarget);
@@ -312,14 +318,14 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
 
 		return saltFunc;
 	}
-    
+
 
     @Override
     public DescriptorImpl getDescriptor() {
         return (DescriptorImpl) super.getDescriptor();
     }
 
-    @Extension 
+    @Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
         int pollTime = 10;
@@ -349,7 +355,7 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
         public int getPollTime() {
             return pollTime;
         }
-        
+
         public int getMinionTimeout() {
 	        return minionTimeout;
         }
@@ -374,11 +380,11 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
         			break;
         		}
         	}
-            
+
             if (usedCredential == null) {
                 return FormValidation.error("CredentialId error: no credential found with given ID.");
             }
-            
+
             Launcher launcher = Jenkins.getInstance().createLauncher(TaskListener.NULL);
 
             if (!servername.matches("\\{\\{\\w+\\}\\}")) {
@@ -471,7 +477,7 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
             }
             return FormValidation.ok();
         }
-        
+
         public FormValidation doCheckMinionTimeout(@QueryParameter String value) {
             String errorText = "Specify a non zero number. Positive numbers fail the build when "
                     + "reached, negative numbers will timeout minions without failing";
