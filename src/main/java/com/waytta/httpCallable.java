@@ -70,6 +70,12 @@ class httpCallable extends MasterToSlaveCallable<JSONObject, IOException> {
 
             // Server response should be json so this should work
             responseJSON = (JSONObject) JSONSerializer.toJSON(responseText);
+            // pass along server header during login
+            if (auth == null || auth.isEmpty()) {
+                String serverHeader = "unknown";
+                serverHeader = connection.getHeaderField("Server");
+                responseJSON.element("server", serverHeader);
+            }
             return responseJSON;
         } finally {
             if (connection != null) {

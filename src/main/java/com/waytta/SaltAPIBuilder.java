@@ -186,19 +186,15 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
             listener.error("Invalid credentials");
             return false;
         }
-        String netapi = launcher.getChannel().call(new httpServerCallable(myservername));
-        LOGGER.log(Level.FINE, "Discovered netapi: " + netapi);
 
 		 // Setup connection for auth
 	    JSONObject auth = Utils.createAuthArray(credential, authtype);
 
 	    // Get an auth token
-	    String token = "";
-	    token = Utils.getToken(launcher, myservername, auth);
-	    if (token.contains("Error")) {
-	        listener.error(token);
-	        return false;
-	    }
+	    serverToken serverToken = Utils.getToken(launcher, myservername, auth);
+	    String token = serverToken.getToken();
+	    String netapi = serverToken.getServer();
+	    LOGGER.log(Level.FINE, "Discovered netapi: " + netapi);
 
 	    // If we got this far, auth must have been good and we've got a token
 	    JSONObject saltFunc = prepareSaltFunction(build, listener, myClientInterface, mytarget, myfunction, myarguments);
@@ -393,7 +389,7 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
             if (!servername.matches("\\{\\{\\w+\\}\\}")) {
             	JSONObject auth = Utils.createAuthArray(usedCredential, authtype);
             	try {
-            	    String token = Utils.getToken(launcher, servername, auth);
+            	    String token = Utils.getToken(launcher, servername, auth).getToken();
             	    if (token.contains("Error")) {
             	        return FormValidation.error("Client error: " + token);
             	    }

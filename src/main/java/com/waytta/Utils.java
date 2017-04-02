@@ -34,23 +34,18 @@ import net.sf.json.JSONSerializer;
 import hudson.util.FormValidation;
 
 public class Utils {
-    private static final String RETCODE_FIELD_NAME = "retcode";
-
-    public static String getToken(Launcher launcher, String servername, JSONObject auth) throws InterruptedException, IOException {
+    public static serverToken getToken(Launcher launcher, String servername, JSONObject auth) throws InterruptedException, IOException {
         String token = "";
+        String server = "";
         JSONObject httpResponse = launcher.getChannel().call(new httpCallable(servername + "/login", auth, null));
-        try {
-            JSONArray returnArray = httpResponse.getJSONArray("return");
+        server = httpResponse.getString("server");
+        JSONArray returnArray = httpResponse.getJSONArray("return");
             for (Object o : returnArray) {
                 JSONObject line = (JSONObject) o;
                 // This token will be used for all subsequent connections
                 token = line.getString("token");
             }
-        } catch (Exception e) {
-            token = "Auth Error: " + e + "\n\n" + httpResponse.toString(2).split("\\\\n")[0];
-            return token;
-        }
-        return token;
+        return new serverToken(token, server);
     }
 
     // replaces $string with value of env($string). Used in conjunction with
@@ -176,6 +171,7 @@ public class Utils {
     }
 
     private static boolean validateInnerJsonObject(JSONObject minion) {
+        final String RETCODE_FIELD_NAME = "retcode";
         boolean result = true;
 
         for (Object name : minion.names()) {

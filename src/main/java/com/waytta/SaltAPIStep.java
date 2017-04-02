@@ -200,20 +200,14 @@ public class SaltAPIStep extends AbstractStepImpl {
                 return null;
             }
 
-            String netapi = launcher.getChannel().call(new httpServerCallable(saltBuilder.getServername()));
-            LOGGER.log(Level.FINE, "Discovered netapi: " + netapi);
-
             // Setup connection for auth
     	    JSONObject auth = Utils.createAuthArray(credential, saltBuilder.getAuthtype());
 
     	    // Get an auth token
-    	    String token = "";
-    	    token = Utils.getToken(launcher, saltBuilder.getServername(), auth);
-    	    if (token.contains("Error")) {
-    	        listener.error(token);
-                run.setResult(Result.FAILURE);
-                return null;
-    	    }
+            serverToken serverToken = Utils.getToken(launcher, saltBuilder.getServername(), auth);
+            String token = serverToken.getToken();
+            String netapi = serverToken.getServer();
+            LOGGER.log(Level.FINE, "Discovered netapi: " + netapi);
 
     	    // If we got this far, auth must have been good and we've got a token
     	    JSONObject saltFunc = saltBuilder.prepareSaltFunction(run, listener, saltBuilder.getClientInterface().getDescriptor().getDisplayName(), saltBuilder.getTarget(), saltBuilder.getFunction(), saltBuilder.getArguments());
