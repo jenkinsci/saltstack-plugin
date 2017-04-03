@@ -5,12 +5,11 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
 import jenkins.security.MasterToSlaveCallable;
+
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
@@ -57,11 +56,33 @@ class HttpCallable extends MasterToSlaveCallable<JSONObject, IOException> {
                 wr.close();
             }
 
-            if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
+            // Check http response code and fail out on error
+            if (connection.getResponseCode() < 200 || connection.getResponseCode() > 299) {
+                String responseError = "";
+
+                try {
                     InputStream err = connection.getErrorStream();
-                    String response = read(err);
-                    err.close();
-                    throw new IOException(response);
+                    if (err != null) {
+                        responseError += "HTTP ERROR: \n" + read(err) + "\n\n";
+                        err.close();
+                    }
+                } catch(Exception e){
+                }
+
+                try {
+                    InputStream str = connection.getInputStream();
+                    if (str != null) {
+                        responseError += "HTTP Response: \n" + read(str);
+                        str.close();
+                    }
+                } catch(Exception e) {
+                }
+
+
+                throw new IOException("Bad ResponseCode: " +
+                                      connection.getResponseCode() + " " +
+                                      connection.getResponseMessage() + "\n" +
+                                      responseError);
             }
 
             // Get Response

@@ -19,55 +19,60 @@ public class LocalSubsetClient extends BasicClient {
 	private String arguments;
 	private String subset = "1";
 	private String target;
-	private String targetType;
+	private String targettype;
 
     @DataBoundConstructor
-    public LocalSubsetClient(String function, String arguments, String subset, String target, String targetType) {
+    public LocalSubsetClient(String function, String arguments, String subset, String target, String targettype) {
     	this.function = function;
     	this.arguments = arguments;
     	this.subset = subset;
     	this.target = target;
-    	this.targetType = targetType;
+    	this.targettype = targettype;
     }
+    @Override
     public String getFunction() {
     	return function;
     }
-    
+
+    @Override
     public String getArguments() {
     	return arguments;
     }
 
+    @Override
     public String getSubset() {
     	return subset;
     }
-    
+
+    @Override
     public String getTarget() {
         return target;
     }
 
-    public String getTargetType() {
-        return targetType;
+    @Override
+    public String getTargettype() {
+        return targettype;
     }
-   
+
     @Symbol("subset") @Extension
     public static class DescriptorImpl extends BasicClientDescriptor {
     	public DescriptorImpl() {
             super(LocalSubsetClient.class);
         }
-        
+
         @Override
         public String getDisplayName() {
         	return "local_subset";
         }
-        
+
         public FormValidation doCheckFunction(@QueryParameter String value) {
             return Utils.validateFormStringField(value, "Please specify a salt function", "Isn't it too short?");
         }
-    	
+
         public FormValidation doCheckTarget(@QueryParameter String value) {
             return Utils.validateFormStringField(value, "Please specify a salt target", "Isn't it too short?");
         }
-        
+
         public FormValidation doCheckSubset(@QueryParameter String value) {
         	// Check to see if paramorized. Ex: {{variable}}
         	// This cannot be evaluated until build, so trust that all is well
@@ -85,6 +90,6 @@ public class LocalSubsetClient extends BasicClient {
             return FormValidation.ok();
         }
     }
-    
+
     public static final BasicClientDescriptor DESCRIPTOR = new DescriptorImpl();
 }

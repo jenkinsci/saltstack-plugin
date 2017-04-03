@@ -125,7 +125,6 @@ public class Builds {
         return returnArray;
     }
 
-
     public static JSONArray runBlockingBuild(Launcher launcher, Run build, String myservername,
             String token, JSONObject saltFunc, TaskListener listener, int pollTime, int minionTimeout, String netapi) throws IOException, InterruptedException {
         JSONArray returnArray = new JSONArray();
@@ -154,16 +153,11 @@ public class Builds {
         JSONObject resultObject = new JSONObject();
         JSONArray httpArray = new JSONArray();
         httpResponse = launcher.getChannel().call(new HttpCallable(myservername + "/jobs/" + jid, null, token));
-        try {
-            httpArray = returnData(httpResponse, netapi);
-            for (Object o : httpArray) {
-                JSONObject line = (JSONObject) o;
-                minionsArray = line.getJSONArray("Minions");
-                resultObject = line.getJSONObject("Result");
-            }
-        } catch (Exception e) {
-            listener.error(httpResponse.toString(2));
-            build.setResult(Result.FAILURE);
+        httpArray = returnData(httpResponse, netapi);
+        for (Object o : httpArray) {
+            JSONObject line = (JSONObject) o;
+            minionsArray = line.getJSONArray("Minions");
+            resultObject = line.getJSONObject("Result");
         }
 
         // Check Minions array for number of targets minions

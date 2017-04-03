@@ -14,27 +14,27 @@ abstract public class BasicClient implements ExtensionPoint, Describable<BasicCl
 	public String getFunction() {
 		return "";
 	}
-	
+
 	public String getArguments() {
 		return "";
 	}
-	
+
 	public String getTarget() {
 		return "";
 	}
-	
-	public String getTargetType() {
+
+	public String getTargettype() {
 		return "";
 	}
-    
+
 	public boolean getBlockbuild() {
 		return false;
 	}
-    
+
 	public String getBatchSize() {
 		return "";
 	}
-    
+
 	public int getJobPollTime() {
 		return 10;
 	}
@@ -42,11 +42,11 @@ abstract public class BasicClient implements ExtensionPoint, Describable<BasicCl
 	public int getMinionTimeout() {
 	    return 30;
 	}
-    
+
 	public String getMods() {
 		return "";
 	}
-    
+
 	public String getPillarvalue() {
 		return "";
 	}
@@ -54,21 +54,30 @@ abstract public class BasicClient implements ExtensionPoint, Describable<BasicCl
 	public String getSubset() {
 		return "1";
 	}
-	
+
 	public String getTag() {
 		return "";
 	}
-	
+
 	public String getPost() {
 		return "";
 	}
-	
-	public Descriptor<BasicClient> getDescriptor() {
-        return Jenkins.getInstance().getDescriptor(getClass());
+
+	@Override
+    public Descriptor<BasicClient> getDescriptor() {
+	    Jenkins jenkins = Jenkins.getInstance();
+	    if (jenkins == null) {
+	        throw new IllegalStateException("Jenkins has not been started, or was already shut down");
+	    }
+	    return jenkins.getDescriptorOrDie(getClass());
     }
-    
+
     public List<BasicClientDescriptor> getClientDescriptors() {
-    	return Jenkins.getInstance().getDescriptorList(BasicClient.class);
+        Jenkins jenkins = Jenkins.getInstance();
+        if (jenkins == null) {
+            throw new IllegalStateException("Jenkins has not been started, or was already shut down");
+        }
+        return jenkins.getDescriptorList(BasicClient.class);
     }
 
     abstract public static class BasicClientDescriptor extends Descriptor<BasicClient> {
@@ -76,9 +85,10 @@ abstract public class BasicClient implements ExtensionPoint, Describable<BasicCl
             super(clazz);
         }
 
+        @Override
         abstract public String getDisplayName();
-        
-        public ListBoxModel doFillTargetTypeItems() {
+
+        public ListBoxModel doFillTargettypeItems() {
             ListBoxModel items = new ListBoxModel();
             items.add("glob", "glob");
             items.add("pcre", "pcre");

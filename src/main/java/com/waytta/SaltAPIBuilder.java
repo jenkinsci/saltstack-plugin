@@ -96,7 +96,7 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
     }
 
     public String getTargettype() {
-    	return clientInterface.getTargetType();
+    	return clientInterface.getTargettype();
     }
 
     public String getFunction() {
@@ -384,7 +384,11 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
                 return FormValidation.error("CredentialId error: no credential found with given ID.");
             }
 
-            Launcher launcher = Jenkins.getInstance().createLauncher(TaskListener.NULL);
+            Jenkins jenkins = Jenkins.getInstance();
+            if (jenkins == null) {
+                throw new IllegalStateException("Jenkins has not been started, or was already shut down");
+            }
+            Launcher launcher = jenkins.createLauncher(TaskListener.NULL);
 
             if (!servername.matches("\\{\\{\\w+\\}\\}")) {
             	JSONObject auth = Utils.createAuthArray(usedCredential, authtype);

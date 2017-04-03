@@ -66,7 +66,7 @@ public class SaltAPIStep extends AbstractStepImpl {
     }
 
     public String getTargettype() {
-    	return clientInterface.getTargetType();
+    	return clientInterface.getTargettype();
     }
 
     public String getFunction() {

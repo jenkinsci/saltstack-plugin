@@ -16,7 +16,7 @@
     <f:textbox />
   </f:entry>
  
-  <f:entry field="targetType" title="Target Type">
+  <f:entry field="targettype" title="Target Type">
     <f:select />
   </f:entry>
 </j:jelly>

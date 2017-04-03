@@ -18,25 +18,28 @@ public class LocalClient extends BasicClient {
 	private int minionTimeout = 30;
 	private boolean blockbuild = false;
 	private String target;
-	private String targetType;
+	private String targettype;
 	private String function;
 	private String arguments;
 
     @DataBoundConstructor
-    public LocalClient(String function, String arguments, String target, String targetType) {
+    public LocalClient(String function, String arguments, String target, String targettype) {
     	this.function = function;
     	this.arguments = arguments;
     	this.target = target;
-    	this.targetType = targetType;
+    	this.targettype = targettype;
     }
+    @Override
     public String getFunction() {
     	return function;
     }
 
+    @Override
     public String getArguments() {
     	return arguments;
     }
 
+    @Override
     public int getJobPollTime() {
         return jobPollTime;
     }
@@ -46,6 +49,7 @@ public class LocalClient extends BasicClient {
         this.jobPollTime = jobPollTime;
     }
 
+    @Override
     public int getMinionTimeout() {
         return minionTimeout;
     }
@@ -55,8 +59,9 @@ public class LocalClient extends BasicClient {
         this.minionTimeout = minionTimeout;
     }
 
+    @Override
     public boolean getBlockbuild() {
-        return blockbuild; 
+        return blockbuild;
     }
 
     @DataBoundSetter
@@ -64,12 +69,14 @@ public class LocalClient extends BasicClient {
         this.blockbuild = blockbuild;
     }
 
+    @Override
     public String getTarget() {
         return target;
     }
 
-    public String getTargetType() {
-        return targetType;
+    @Override
+    public String getTargettype() {
+        return targettype;
     }
 
     @Symbol("local") @Extension
@@ -93,11 +100,19 @@ public class LocalClient extends BasicClient {
 
         // Set default to global default
         public int getJobPollTime() {
-        	SaltAPIBuilder.DescriptorImpl sabd = (SaltAPIBuilder.DescriptorImpl) Jenkins.getInstance().getDescriptor( SaltAPIBuilder.class );
-        	return sabd.getPollTime();
+            Jenkins jenkins = Jenkins.getInstance();
+            if (jenkins == null) {
+                throw new IllegalStateException("Jenkins has not been started, or was already shut down");
+            }
+            SaltAPIBuilder.DescriptorImpl sabd = (SaltAPIBuilder.DescriptorImpl) jenkins.getDescriptor( SaltAPIBuilder.class );
+            return sabd.getPollTime();
         }
         public int getMinionTimeout() {
-            SaltAPIBuilder.DescriptorImpl sabd = (SaltAPIBuilder.DescriptorImpl) Jenkins.getInstance().getDescriptor( SaltAPIBuilder.class );
+            Jenkins jenkins = Jenkins.getInstance();
+            if (jenkins == null) {
+                throw new IllegalStateException("Jenkins has not been started, or was already shut down");
+            }
+            SaltAPIBuilder.DescriptorImpl sabd = (SaltAPIBuilder.DescriptorImpl) jenkins.getDescriptor( SaltAPIBuilder.class );
             return sabd.getMinionTimeout();
         }
     }

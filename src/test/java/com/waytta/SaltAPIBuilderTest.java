@@ -53,7 +53,7 @@ public class SaltAPIBuilderTest {
 
     @Before
     public void setup(){
-        //clientInterfaces = mock(JSONObject.class);                                          
+        //clientInterfaces = mock(JSONObject.class);
         //when(clientInterfaces.has("clientInterface")).thenReturn(TRUE);
         credentials = new ArrayList<StandardUsernamePasswordCredentials>();
     }
@@ -61,7 +61,7 @@ public class SaltAPIBuilderTest {
 
     private void validateBuilder(SaltAPIBuilder builder,
                                  String clientInterfaces,
-                                 String mods, 
+                                 String mods,
                                  String pillarValue){
         validateBuilder(builder, clientInterfaces, TEN, "100%", mods, pillarValue );
     }
@@ -70,7 +70,7 @@ public class SaltAPIBuilderTest {
         validateBuilder( builder, clientInterface, TEN, "100%", "", "");
     }
 
-    private void validateBuilder(String clientInterface, 
+    private void validateBuilder(String clientInterface,
                                  SaltAPIBuilder builder,
                                  String mods) {
         validateBuilder( builder, clientInterface, TEN, "100%", mods, "");
@@ -87,7 +87,7 @@ public class SaltAPIBuilderTest {
                                  Integer jobPollTime) {
         validateBuilder( builder, clientInterface, jobPollTime, "100%", "", "");
     }
-    
+
     private void validateBuilder(SaltAPIBuilder builder,
                                  String clientInterface,
                                  Integer jobPollTime,
@@ -101,7 +101,7 @@ public class SaltAPIBuilderTest {
         assertEquals(mods, builder.getMods());
         assertEquals(pillarValue, builder.getPillarvalue());
     }
-    
+
     SaltAPIBuilder build() {
         return new SaltAPIBuilder(
                 "servername",
@@ -116,27 +116,27 @@ public class SaltAPIBuilderTest {
         AbstractBuild jenkinsBuild = mock(AbstractBuild.class);
         Launcher launcher = mock(Launcher.class);
         BuildListener buildListener = mock(BuildListener.class);
-        
+
         // TODO fix test workspace errors
         //assertFalse(builder.perform(jenkinsBuild, launcher, buildListener));
     }
-    
+
     @Test
     public void testPerformWithFailingCredentials() throws Exception {
         StandardUsernamePasswordCredentials mockCred = mock(StandardUsernamePasswordCredentials.class);
         when(mockCred.getId()).thenReturn(DEFAULT_CREDENTIAL_ID);
         when(mockCred.getPassword()).thenReturn(DEFAULT_CREDENTIAL_PASSWORD);
         credentials.add(mockCred);
-        
+
         SaltAPIBuilder builder = setupBuilderForDefaultPerform();
-        
+
         BuildListener buildListener = mock(BuildListener.class);
         PrintStream printer = mock(PrintStream.class);
         when(buildListener.getLogger()).thenReturn(printer);
 
         AbstractBuild jenkinsBuild = mock(AbstractBuild.class);
         Launcher launcher = mock(Launcher.class);
-        
+
         // TODO fix test workspace errors
         //assertFalse(builder.perform(jenkinsBuild, launcher, buildListener));
     }
@@ -147,10 +147,10 @@ public class SaltAPIBuilderTest {
         when(mockCred.getId()).thenReturn(DEFAULT_CREDENTIAL_ID);
         when(mockCred.getPassword()).thenReturn(DEFAULT_CREDENTIAL_PASSWORD);
         credentials.add(mockCred);
-        
+
         SaltAPIBuilder builder = setupBuilderForDefaultPerform();
         mockStatic(Utils.class);
-        when(Utils.getToken(any(Launcher.class), anyString(), any(JSONObject.class))).thenReturn("okie_dokie");
+        when(Utils.getToken(any(Launcher.class), anyString(), any(JSONObject.class))).thenReturn(new ServerToken(null, null));
 
         BuildListener buildListener = mock(BuildListener.class);
         PrintStream printer = mock(PrintStream.class);
@@ -168,7 +168,7 @@ public class SaltAPIBuilderTest {
         returnArray.add(0,"junit");
         when(httpResponse.getJSONArray("return")).thenReturn(returnArray);
         when(Utils.validateFunctionCall(returnArray)).thenReturn(true);
-        
+
         // TODO fix test workspace errors
         //assertTrue(builder.perform(jenkinsBuild, launcher, buildListener));
     }
@@ -192,7 +192,7 @@ public class SaltAPIBuilderTest {
                 StandardUsernamePasswordCredentials.class, jenkins, ACL.SYSTEM, new ArrayList<DomainRequirement>())).thenReturn(credentials);;
 
         SaltAPIBuilder builder = build();
-        
+
         return builder;
     }
 }
