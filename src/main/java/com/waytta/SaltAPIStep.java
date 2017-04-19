@@ -197,7 +197,6 @@ public class SaltAPIStep extends AbstractStepImpl {
             StandardUsernamePasswordCredentials credential = CredentialsProvider.findCredentialById(
             		saltBuilder.getCredentialsId(), StandardUsernamePasswordCredentials.class, run);
             if (credential == null) {
-                run.setResult(Result.FAILURE);
                 throw new RuntimeException("Invalid credentials");
             }
 
@@ -221,7 +220,6 @@ public class SaltAPIStep extends AbstractStepImpl {
             boolean validFunctionExecution = Utils.validateFunctionCall(returnArray);
             if (!validFunctionExecution) {
                 listener.error("One or more minion did not return code 0\n");
-                run.setResult(Result.FAILURE);
                 throw new SaltException(returnArray.toString());
             }
 

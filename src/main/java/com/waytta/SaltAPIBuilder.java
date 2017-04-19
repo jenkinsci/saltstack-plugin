@@ -168,11 +168,9 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
         try {
             success = perform(run, launcher, listener);
         } catch (SaltException e) {
-            run.setResult(Result.FAILURE);
             throw new AbortException("Salt run failure: " + e);
         }
     	if (!success) {
-    	    run.setResult(Result.FAILURE);
     	    throw new AbortException("Salt run failure");
     	}
     }

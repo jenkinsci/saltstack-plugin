@@ -236,7 +236,6 @@ public class Builds {
                     listener.error(
                             "Minions timed out:\n" + minionsArray.toString() + "\n\n");
                     if (timeoutFail) {
-                        build.setResult(Result.FAILURE);
                         throw new SaltException(httpArray.getJSONObject(0).getJSONObject("Result").toString());
                     }
                     returnArray.clear();
