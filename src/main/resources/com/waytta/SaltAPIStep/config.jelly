@@ -21,4 +21,8 @@
 
   <f:dropdownDescriptorSelector title="Client Interface" field="clientInterface"
     descriptors="${descriptor.clientDescriptors}" />
+    
+  <f:entry title="Save output to file" field="saveFile" description="Save Salt return into saltOutput.json file in workspace">
+    <f:checkbox />
+  </f:entry>
 </j:jelly>

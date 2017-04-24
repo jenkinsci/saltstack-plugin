@@ -20,6 +20,7 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.Item;
 import hudson.model.Job;
@@ -46,6 +47,7 @@ public class SaltAPIStep extends AbstractStepImpl {
     private BasicClient clientInterface;
     private boolean saveEnvVar = false;
     private final String credentialsId;
+    private boolean saveFile = false;
 
     @DataBoundConstructor
     public SaltAPIStep(String servername, String authtype, BasicClient clientInterface, String credentialsId) {
@@ -64,11 +66,11 @@ public class SaltAPIStep extends AbstractStepImpl {
     }
 
     public String getTarget() {
-    	return clientInterface.getTarget();
+        return clientInterface.getTarget();
     }
 
     public String getTargettype() {
-    	return clientInterface.getTargettype();
+        return clientInterface.getTargettype();
     }
 
     public String getFunction() {
@@ -80,15 +82,15 @@ public class SaltAPIStep extends AbstractStepImpl {
     }
 
     public boolean getBlockbuild() {
-    	return clientInterface.getBlockbuild();
+        return clientInterface.getBlockbuild();
     }
 
     public String getBatchSize() {
-    	return clientInterface.getBatchSize();
+        return clientInterface.getBatchSize();
     }
 
     public int getJobPollTime() {
-    	return clientInterface.getJobPollTime();
+        return clientInterface.getJobPollTime();
     }
 
     public int getMinionTimeout() {
@@ -96,15 +98,15 @@ public class SaltAPIStep extends AbstractStepImpl {
     }
 
     public String getMods() {
-    	return clientInterface.getMods();
+        return clientInterface.getMods();
     }
 
     public String getPillarvalue() {
-    	return clientInterface.getPillarvalue();
+        return clientInterface.getPillarvalue();
     }
 
     public String getSubset() {
-    	return clientInterface.getSubset();
+        return clientInterface.getSubset();
     }
 
     public String getCredentialsId() {
@@ -120,16 +122,25 @@ public class SaltAPIStep extends AbstractStepImpl {
         return saveEnvVar;
     }
 
+    @DataBoundSetter
+    public void setSaveFile(boolean saveFile) {
+        this.saveFile = saveFile;
+    }
+
+    public boolean getSaveFile() {
+        return saveFile;
+    }
+
     public BasicClient getClientInterface() {
-    	return clientInterface;
+        return clientInterface;
     }
 
     public String getPost() {
-    	return clientInterface.getPost();
+        return clientInterface.getPost();
     }
 
     public String getTag() {
-    	return clientInterface.getTag();
+        return clientInterface.getTag();
     }
 
     @Override
@@ -140,7 +151,7 @@ public class SaltAPIStep extends AbstractStepImpl {
     @Extension
     public static final class DescriptorImpl extends AbstractStepDescriptorImpl {
         public DescriptorImpl() {
-        	super(SaltAPIStepExecution.class);
+            super(SaltAPIStepExecution.class);
         }
 
         @Override
@@ -154,18 +165,18 @@ public class SaltAPIStep extends AbstractStepImpl {
         }
 
         public FormValidation doCheckServername(@QueryParameter String value) {
-        	return SaltAPIBuilder.DescriptorImpl.doCheckServername(value);
+            return SaltAPIBuilder.DescriptorImpl.doCheckServername(value);
         }
 
         public ListBoxModel doFillCredentialsIdItems(
-        		@AncestorInPath Job context,
-        		@QueryParameter final String credentialsId,
+                @AncestorInPath Job context,
+                @QueryParameter final String credentialsId,
                 @QueryParameter final String servername) {
             return SaltAPIBuilder.DescriptorImpl.doFillCredentialsIdItems(context, credentialsId, servername);
         }
 
         public FormValidation doCheckCredentialsId(@AncestorInPath Item project, @QueryParameter String value) {
-        	return SaltAPIBuilder.DescriptorImpl.doCheckCredentialsId(project, value);
+            return SaltAPIBuilder.DescriptorImpl.doCheckCredentialsId(project, value);
         }
 
         public FormValidation doTestConnection(
@@ -173,7 +184,7 @@ public class SaltAPIStep extends AbstractStepImpl {
                 @QueryParameter String credentialsId,
                 @QueryParameter String authtype,
                 @AncestorInPath Item project) {
-        	return SaltAPIBuilder.DescriptorImpl.doTestConnection(servername, credentialsId, authtype, project);
+            return SaltAPIBuilder.DescriptorImpl.doTestConnection(servername, credentialsId, authtype, project);
         }
     }
 
@@ -181,8 +192,11 @@ public class SaltAPIStep extends AbstractStepImpl {
         @Inject
         private transient SaltAPIStep saltStep;
 
-    	@StepContextParameter
+        @StepContextParameter
         private transient Run<?, ?> run;
+
+        @StepContextParameter
+        private transient FilePath workspace;
 
         @StepContextParameter
         private transient TaskListener listener;
@@ -190,28 +204,28 @@ public class SaltAPIStep extends AbstractStepImpl {
         @StepContextParameter
         private transient Launcher launcher;
 
-    	@Override
+        @Override
         protected String run() throws Exception, SaltException {
-    		SaltAPIBuilder saltBuilder = new SaltAPIBuilder(saltStep.servername, saltStep.authtype, saltStep.clientInterface, saltStep.credentialsId);
+            SaltAPIBuilder saltBuilder = new SaltAPIBuilder(saltStep.servername, saltStep.authtype, saltStep.clientInterface, saltStep.credentialsId);
 
             StandardUsernamePasswordCredentials credential = CredentialsProvider.findCredentialById(
-            		saltBuilder.getCredentialsId(), StandardUsernamePasswordCredentials.class, run);
+                    saltBuilder.getCredentialsId(), StandardUsernamePasswordCredentials.class, run);
             if (credential == null) {
                 throw new RuntimeException("Invalid credentials");
             }
 
             // Setup connection for auth
-    	    JSONObject auth = Utils.createAuthArray(credential, saltBuilder.getAuthtype());
+            JSONObject auth = Utils.createAuthArray(credential, saltBuilder.getAuthtype());
 
-    	    // Get an auth token
+            // Get an auth token
             ServerToken serverToken = Utils.getToken(launcher, saltBuilder.getServername(), auth);
             String token = serverToken.getToken();
             String netapi = serverToken.getServer();
             LOGGER.log(Level.FINE, "Discovered netapi: " + netapi);
 
-    	    // If we got this far, auth must have been good and we've got a token
-    	    JSONObject saltFunc = saltBuilder.prepareSaltFunction(run, listener, saltBuilder.getClientInterface().getDescriptor().getDisplayName(), saltBuilder.getTarget(), saltBuilder.getFunction(), saltBuilder.getArguments());
-    	    LOGGER.log(Level.FINE, "Sending JSON: " + saltFunc.toString());
+            // If we got this far, auth must have been good and we've got a token
+            JSONObject saltFunc = saltBuilder.prepareSaltFunction(run, listener, saltBuilder.getClientInterface().getDescriptor().getDisplayName(), saltBuilder.getTarget(), saltBuilder.getFunction(), saltBuilder.getArguments());
+            LOGGER.log(Level.FINE, "Sending JSON: " + saltFunc.toString());
 
             JSONArray returnArray = saltBuilder.performRequest(launcher, run, token, saltBuilder.getServername(), saltFunc, listener, netapi);
             LOGGER.log(Level.FINE, "Received response: " + returnArray);
@@ -223,7 +237,11 @@ public class SaltAPIStep extends AbstractStepImpl {
                 throw new SaltException(returnArray.toString());
             }
 
-    		return returnArray.toString();
+            if (saltStep.saveFile) {
+                Utils.writeFile(returnArray.toString(), workspace);
+            }
+
+            return returnArray.toString();
         }
 
         private static final long serialVersionUID = 1L;

@@ -7,6 +7,7 @@ import java.util.regex.Pattern;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 
 import hudson.EnvVars;
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -26,11 +27,11 @@ public class Utils {
         JSONObject httpResponse = launcher.getChannel().call(new HttpCallable(servername + "/login", auth, null));
         server = httpResponse.getString("server");
         JSONArray returnArray = httpResponse.getJSONArray("return");
-            for (Object o : returnArray) {
-                JSONObject line = (JSONObject) o;
-                // This token will be used for all subsequent connections
-                token = line.getString("token");
-            }
+        for (Object o : returnArray) {
+            JSONObject line = (JSONObject) o;
+            // This token will be used for all subsequent connections
+            token = line.getString("token");
+        }
         return new ServerToken(token, server);
     }
 
@@ -250,5 +251,12 @@ public class Utils {
         auth.put("eauth", authtype);
 
         return auth;
+    }
+
+    public static void writeFile(String message, FilePath workspace) throws IOException, InterruptedException {
+        final String SALTFILE = "saltOutput.json";
+
+        FilePath outputFile = new FilePath(workspace, SALTFILE);
+        outputFile.write(message, "UTF-8");
     }
 }

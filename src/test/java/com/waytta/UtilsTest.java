@@ -54,7 +54,7 @@ public class UtilsTest extends HudsonTestCase {
             }
         }
     }
-    
+
     @Test
     public void testFailedJSON() {
         File folder = new File("./src/test/java/com/waytta/failedJSON");
@@ -79,6 +79,7 @@ public class UtilsTest extends HudsonTestCase {
     @Mock
     Run jenkinsBuildMock;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         jenkinsBuildMock = mock(Run.class);
