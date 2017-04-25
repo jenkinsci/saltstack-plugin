@@ -6,7 +6,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import jenkins.security.MasterToSlaveCallable;
 
@@ -28,36 +31,67 @@ class HttpCallable extends MasterToSlaveCallable<JSONObject, IOException> {
 
     @Override
     public JSONObject call() throws IOException {
+        final Logger LOGGER = Logger.getLogger("com.waytta.saltstack");
+
         HttpURLConnection connection = null;
         JSONObject responseJSON = new JSONObject();
 
         try {
-            // Create connection
-            URL url = new URL(targetURL);
-            connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestProperty("Accept", "application/json");
-            connection.setUseCaches(false);
-            if ((urlParams != null && !urlParams.isEmpty()) || targetURL.contains("/hook") ) {
-                // We have stuff to send, so do an HTTP POST not GET
-                connection.setDoOutput(true);
-                connection.setRequestProperty("Content-Type", "application/json");
-            }
-            connection.setConnectTimeout(5000); // set timeout to 5 seconds
-            if (auth != null && !auth.isEmpty()) {
-                connection.setRequestProperty("X-Auth-Token", auth);
-            }
+            // Retry http connection on timeout
+            int RETRYCOUNT = 3;
+            int currentCount = 0;
+            int responseCode = -1;
+            while (currentCount++ < RETRYCOUNT) {
+                try {
+                    // Create connection
+                    URL url = new URL(targetURL);
+                    connection = (HttpURLConnection) url.openConnection();
+                    connection.setRequestProperty("Accept", "application/json");
+                    connection.setUseCaches(false);
+                    if ((urlParams != null && !urlParams.isEmpty()) || targetURL.contains("/hook") ) {
+                        // We have stuff to send, so do an HTTP POST not GET
+                        connection.setDoOutput(true);
+                        connection.setRequestProperty("Content-Type", "application/json");
+                    }
+                    connection.setConnectTimeout(5000); // set timeout to 5 seconds
+                    if (auth != null && !auth.isEmpty()) {
+                        connection.setRequestProperty("X-Auth-Token", auth);
+                    }
 
-            // Send request
-            if ((urlParams != null && !urlParams.isEmpty()) || targetURL.contains("/hook")) {
-                // only necessary if we have stuff to send
-                DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
-                wr.writeBytes(urlParams.toString());
-                wr.flush();
-                wr.close();
+                    // Send request
+                    if ((urlParams != null && !urlParams.isEmpty()) || targetURL.contains("/hook")) {
+                        // only necessary if we have stuff to send
+                        DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
+                        wr.writeBytes(urlParams.toString());
+                        wr.flush();
+                        wr.close();
+                    }
+
+                    responseCode = connection.getResponseCode();
+
+                    // Retry on request timeout
+                    if (responseCode == 408) {
+                        throw new SocketTimeoutException("408 Response");
+                    }
+
+                    // http call successful. Exit retry loop.
+                    break;
+                } catch (SocketTimeoutException e) {
+                    if (currentCount < RETRYCOUNT) {
+                        LOGGER.log(Level.FINE, e.getMessage() + " encountered " + currentCount + " times, retrying.");
+                        try {
+                            Thread.sleep(3 * 1000L);
+                        } catch (InterruptedException ex) {
+                            Thread.currentThread().interrupt();
+                        }
+                    } else {
+                        LOGGER.log(Level.FINE, e.getMessage() + " encountered " + currentCount + " times. Failing");
+                    }
+                }
             }
 
             // Check http response code and fail out on error
-            if (connection.getResponseCode() < 200 || connection.getResponseCode() > 299) {
+            if (responseCode < 200 || responseCode > 299) {
                 String responseError = "";
 
                 try {
