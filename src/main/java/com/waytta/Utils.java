@@ -64,7 +64,7 @@ public class Utils {
 
         // Salt's /hook url returns non standard response. Assume this response
         // is valid
-        JSONArray successHook = JSONArray.fromObject("[{\"Success\": True}]");
+        JSONArray successHook = JSONArray.fromObject("[{\"result\": true}]");
         if (returnArray.equals(successHook)) {
             return true;
         }

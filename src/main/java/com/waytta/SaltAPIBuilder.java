@@ -329,8 +329,10 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
             return saltFunc;
         }
 
-        saltFunc.put("tgt", mytarget);
-        saltFunc.put("expr_form", getTargettype());
+        if ( !myClientInterface.equals("runner") ) {
+          saltFunc.put("tgt", mytarget);
+          saltFunc.put("expr_form", getTargettype());
+        }
         saltFunc.put("fun", myfunction);
         if (myarguments != null) {
             Builds.addArgumentsToSaltFunction(myarguments, saltFunc);
