@@ -1,0 +1,3 @@
+[{
+    "acc3.example.sk": "The minion function caused an exception: Traceback (most recent call last):\n  File \"/usr/lib/python2.6/site-packages/salt/minion.py\", line 1445, in _thread_return\n    return_data = executor.execute()\n  File \"/usr/lib/python2.6/site-packages/salt/executors/direct_call.py\", line 28, in execute\n    return self.func(*self.args, **self.kwargs)\n  File \"/usr/lib/python2.6/site-packages/salt/modules/state.py\", line 815, in highstate\n    err += __pillar__['_errors']\n  File \"/usr/lib/python2.6/site-packages/salt/utils/context.py\", line 211, in __getitem__\n    return self._dict()[key]\nKeyError: '_errors'\n",
+}]
