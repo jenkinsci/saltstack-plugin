@@ -185,8 +185,6 @@ public class SaltAPIBuilderTest {
                 + "\"client\":\"runner\","
                 + "\"mods\":\"\","
                 + "\"pillar\":{\"key\":\"value\"},"
-                + "\"tgt\":\"*\","
-                + "\"expr_form\":\"\","
                 + "\"fun\":\"cmd.run\","
                 + "\"arg\":\"ls -la\","
                 + "\"kwarg\":{}"

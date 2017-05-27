@@ -97,7 +97,6 @@ public class Utils {
                 for (Object name : possibleMinion.names()) {
                     Object field = possibleMinion.get(name.toString());
 
-
                     // Match test failedJSON/commandNotAvailable.json
                     Pattern notFoundPattern = Pattern.compile(".*/bin/sh: 1: \\w+: not found.*");
                     Matcher matcher = notFoundPattern.matcher(field.toString());
@@ -105,23 +104,25 @@ public class Utils {
                         return false;
                     }
 
-
                     // Match test failedJSON/duplicateStateName.json
-                    Pattern renderingFailed = Pattern.compile(".*Rendering SLS '[\\w:.-]*' failed:.*");
+                    Pattern renderingFailed = Pattern.compile(".*Rendering SLS '[\\w:.-]*' failed.*");
                     matcher = renderingFailed.matcher(field.toString());
                     if (matcher.matches()) {
                         return false;
                     }
 
                     // Match test failedJSON/ERROR.json
-                    Pattern errorFail = Pattern.compile(".*ERROR: Specified.*");
-                    matcher = errorFail.matcher(field.toString());
-                    if (matcher.matches()) {
+                    if (field.toString().contains("ERROR: Specified")) {
                         return false;
                     }
 
                     // Match test failedJSON/functionNotAvailable.json
                     if (field.toString().contains(" is not available.")) {
+                        return false;
+                    }
+
+                    // Match test failedJSON/pillarTraceback.json
+                    if (field.toString().contains("The minion function caused an exception")) {
                         return false;
                     }
 
@@ -175,7 +176,6 @@ public class Utils {
                 // test if cmd.run return is non zero
                 if (jsonObject.has(RETCODE_FIELD_NAME)) {
                     result = jsonObject.getInt(RETCODE_FIELD_NAME) == 0;
-
                     if (!result) {
                         break;
                     }
@@ -186,18 +186,16 @@ public class Utils {
                     // detect where test=True and results key is "null"
                     // See test testHighStateChangesTest
                     if (jsonObject.get("result").equals("null")) {
-                        // deteced null result, skipping
+                        // detected null result, skipping
                         break;
                     }
                     result = jsonObject.getBoolean("result");
-
                     if (!result) {
                         break;
                     }
                 }
 
                 result = validateInnerJsonObject(jsonObject);
-
                 if (!result) {
                     break;
                 }
