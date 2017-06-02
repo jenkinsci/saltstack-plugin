@@ -6,14 +6,15 @@ import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.Set;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+
 import javax.inject.Inject;
 
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
-import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
-import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousStepExecution;
-import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
+import org.jenkinsci.plugins.workflow.steps.*;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -25,11 +26,13 @@ import hudson.Launcher;
 import hudson.model.Item;
 import hudson.model.Job;
 import hudson.model.Result;
+import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+import jenkins.util.Timer;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
@@ -39,7 +42,9 @@ import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.waytta.clientinterface.BasicClient;
 
-public class SaltAPIStep extends AbstractStepImpl {
+import com.google.common.collect.ImmutableSet;
+
+public class SaltAPIStep extends Step {
     private static final Logger LOGGER = Logger.getLogger("com.waytta.saltstack");
 
     private String servername;
@@ -149,10 +154,7 @@ public class SaltAPIStep extends AbstractStepImpl {
     }
 
     @Extension
-    public static final class DescriptorImpl extends AbstractStepDescriptorImpl {
-        public DescriptorImpl() {
-            super(SaltAPIStepExecution.class);
-        }
+    public static final class DescriptorImpl extends StepDescriptor {
 
         @Override
         public String getFunctionName() {
@@ -186,9 +188,20 @@ public class SaltAPIStep extends AbstractStepImpl {
                 @AncestorInPath Item project) {
             return SaltAPIBuilder.DescriptorImpl.doTestConnection(servername, credentialsId, authtype, project);
         }
+
+        @Override
+        public Set<Class<?>> getRequiredContext() {
+            return ImmutableSet.of(Run.class, FilePath.class, TaskListener.class, Launcher.class);
+        }
     }
 
-    public static class SaltAPIStepExecution extends AbstractSynchronousStepExecution<String> {
+    @Override public StepExecution start(StepContext context) throws Exception {
+        return new Execution(this, context);
+    }
+
+    public static class Execution extends AbstractStepExecutionImpl {
+        private static final long serialVersionUID = 1L;
+
         @Inject
         private transient SaltAPIStep saltStep;
 
@@ -204,9 +217,84 @@ public class SaltAPIStep extends AbstractStepImpl {
         @StepContextParameter
         private transient Launcher launcher;
 
+        private transient volatile ScheduledFuture<?> task;
+
+        Execution(SaltAPIStep step, StepContext context) {
+            super(context);
+            this.saltStep = step;
+        }
+
         @Override
-        protected String run() throws Exception, SaltException {
+        public void stop(Throwable cause) throws Exception {
+            if (task != null) {
+                task.cancel(false);
+            }
+            getContext().onFailure(cause);
+        }
+
+        @Override
+        public boolean start() throws Exception {
+            Run<?, ?>run = getContext().get(Run.class);
+            FilePath workspace = getContext().get(FilePath.class);
+            TaskListener listener = getContext().get(TaskListener.class);
+            Launcher launcher = getContext().get(Launcher.class);
+
+            listener.getLogger().println("Started saltStep");
+            callRun();
+            return false;
+        }
+
+        private void callRun() {
+            TaskListener listener;
+            try {
+                listener = getContext().get(TaskListener.class);
+            } catch (Exception x) {
+                LOGGER.log(Level.WARNING, null, x);
+                listener = TaskListener.NULL;
+            }
+            listener.getLogger().println("inside callRun");
+
+            try {
+                String results = runSalt();
+                listener.getLogger().println(results);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            getContext().onSuccess(null);
+            /*
+            task = Timer.get().schedule(new Runnable() {
+                @Override
+                public void run(){
+                    TaskListener listener;
+                    try {
+                        listener = getContext().get(TaskListener.class);
+                    } catch (Exception x) {
+                        LOGGER.log(Level.WARNING, null, x);
+                        listener = TaskListener.NULL;
+                    }
+                    listener.getLogger().println("running");
+                    try {
+                        String results = runSalt();
+                        listener.getLogger().println(results);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                    getContext().onSuccess(null);
+                }
+            }, 5, TimeUnit.SECONDS);
+             */
+        }
+
+        protected String runSalt() throws Exception, SaltException {
+            Run<?, ?>run = getContext().get(Run.class);
+            FilePath workspace = getContext().get(FilePath.class);
+            TaskListener listener = getContext().get(TaskListener.class);
+            Launcher launcher = getContext().get(Launcher.class);
+            listener.getLogger().println("inside runSalt");
+
             SaltAPIBuilder saltBuilder = new SaltAPIBuilder(saltStep.servername, saltStep.authtype, saltStep.clientInterface, saltStep.credentialsId);
+
+            listener.getLogger().println("inside runSalt 2");
 
             StandardUsernamePasswordCredentials credential = CredentialsProvider.findCredentialById(
                     saltBuilder.getCredentialsId(), StandardUsernamePasswordCredentials.class, run);
@@ -214,8 +302,12 @@ public class SaltAPIStep extends AbstractStepImpl {
                 throw new RuntimeException("Invalid credentials");
             }
 
+            listener.getLogger().println("inside runSalt3");
+
             // Setup connection for auth
             JSONObject auth = Utils.createAuthArray(credential, saltBuilder.getAuthtype());
+
+            listener.getLogger().println("inside runSalt4");
 
             // Get an auth token
             ServerToken serverToken = Utils.getToken(launcher, saltBuilder.getServername(), auth);
@@ -223,12 +315,20 @@ public class SaltAPIStep extends AbstractStepImpl {
             String netapi = serverToken.getServer();
             LOGGER.log(Level.FINE, "Discovered netapi: " + netapi);
 
+            listener.getLogger().println("inside runSalt5");
+
+
             // If we got this far, auth must have been good and we've got a token
             JSONObject saltFunc = saltBuilder.prepareSaltFunction(run, listener, saltBuilder.getClientInterface().getDescriptor().getDisplayName(), saltBuilder.getTarget(), saltBuilder.getFunction(), saltBuilder.getArguments());
             LOGGER.log(Level.FINE, "Sending JSON: " + saltFunc.toString());
 
+            listener.getLogger().println("inside runSalt6");
+
+
             JSONArray returnArray = saltBuilder.performRequest(launcher, run, token, saltBuilder.getServername(), saltFunc, listener, netapi);
             LOGGER.log(Level.FINE, "Received response: " + returnArray);
+
+            listener.getLogger().println("inside runSalt7");
 
             // Check for error and print out results
             boolean validFunctionExecution = Utils.validateFunctionCall(returnArray);
@@ -237,14 +337,17 @@ public class SaltAPIStep extends AbstractStepImpl {
                 throw new SaltException(returnArray.toString());
             }
 
+            listener.getLogger().println("inside runSalt8");
+
+
             if (saltStep.saveFile) {
                 Utils.writeFile(returnArray.toString(), workspace);
             }
+            listener.getLogger().println("inside runSalt8");
+
 
             return returnArray.toString();
         }
-
-        private static final long serialVersionUID = 1L;
     }
 
 }
