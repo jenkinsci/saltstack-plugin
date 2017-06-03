@@ -2,14 +2,10 @@ package com.waytta;
 
 import com.waytta.SaltException;
 
-import java.io.IOException;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-
 import javax.inject.Inject;
 
 import hudson.model.Run;
@@ -25,20 +21,12 @@ import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.Item;
 import hudson.model.Job;
-import hudson.model.Result;
-import hudson.model.TaskListener;
-import hudson.tasks.BuildStepDescriptor;
-import hudson.tasks.Builder;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
-import jenkins.model.Jenkins;
-import jenkins.util.Timer;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
-import com.cloudbees.plugins.credentials.CredentialsMatchers;
-import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.waytta.clientinterface.BasicClient;
 
@@ -255,7 +243,6 @@ public class SaltAPIStep extends Step {
 
             // Get an auth token
             ServerToken serverToken = Utils.getToken(launcher, saltBuilder.getServername(), auth);
-            @SuppressWarnings("unused")
             final String token = serverToken.getToken();
             final String netapi = serverToken.getServer();
             LOGGER.log(Level.FINE, "Discovered netapi: " + netapi);

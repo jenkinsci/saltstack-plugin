@@ -1,7 +1,6 @@
 package com.waytta;
 
 import hudson.model.Run;
-import hudson.model.Result;
 import hudson.model.TaskListener;
 
 import java.io.IOException;

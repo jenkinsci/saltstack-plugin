@@ -4,9 +4,6 @@ import hudson.ExtensionPoint;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import jenkins.model.Jenkins;
-import org.kohsuke.stapler.DataBoundConstructor;
-import hudson.DescriptorExtensionList;
-
 import java.io.Serializable;
 import java.util.List;
 import hudson.util.ListBoxModel;
