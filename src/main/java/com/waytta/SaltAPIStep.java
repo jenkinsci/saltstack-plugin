@@ -219,6 +219,8 @@ public class SaltAPIStep extends Step {
 
         private transient volatile ScheduledFuture<?> task;
 
+        SaltAPIBuilder saltBuilder;
+
         Execution(SaltAPIStep step, StepContext context) {
             super(context);
             this.saltStep = step;
@@ -235,16 +237,57 @@ public class SaltAPIStep extends Step {
         @Override
         public boolean start() throws Exception {
             Run<?, ?>run = getContext().get(Run.class);
-            FilePath workspace = getContext().get(FilePath.class);
             TaskListener listener = getContext().get(TaskListener.class);
             Launcher launcher = getContext().get(Launcher.class);
 
             listener.getLogger().println("Started saltStep");
-            callRun();
+
+            saltBuilder = new SaltAPIBuilder(saltStep.servername, saltStep.authtype, saltStep.clientInterface, saltStep.credentialsId);
+
+            StandardUsernamePasswordCredentials credential = CredentialsProvider.findCredentialById(
+                    saltBuilder.getCredentialsId(), StandardUsernamePasswordCredentials.class, run);
+            if (credential == null) {
+                throw new RuntimeException("Invalid credentials");
+            }
+
+            // Setup connection for auth
+            JSONObject auth = Utils.createAuthArray(credential, saltBuilder.getAuthtype());
+
+            // Get an auth token
+            ServerToken serverToken = Utils.getToken(launcher, saltBuilder.getServername(), auth);
+            @SuppressWarnings("unused")
+            final String token = serverToken.getToken();
+            final String netapi = serverToken.getServer();
+            LOGGER.log(Level.FINE, "Discovered netapi: " + netapi);
+
+            // If we got this far, auth must have been good and we've got a token
+            final JSONObject saltFunc = saltBuilder.prepareSaltFunction(run, listener, saltBuilder.getClientInterface().getDescriptor().getDisplayName(), saltBuilder.getTarget(), saltBuilder.getFunction(), saltBuilder.getArguments());
+            LOGGER.log(Level.FINE, "Sending JSON: " + saltFunc.toString());
+
+            listener.getLogger().println("Finishing start");
+
+            new Thread("saltAPI") {
+                @Override
+                public void run() {
+                    try {
+                        callRun(token, saltFunc, netapi);
+                    }
+                    catch (Exception e) {
+                        Execution.this.getContext().onFailure(e);
+                    }
+                }
+            }.start();
+
             return false;
         }
 
-        private void callRun() {
+        /*
+        @Override public void onResume() {
+            callRun();
+        }
+         */
+
+        private void callRun(String token, JSONObject saltFunc, String netapi) {
             TaskListener listener;
             try {
                 listener = getContext().get(TaskListener.class);
@@ -255,7 +298,7 @@ public class SaltAPIStep extends Step {
             listener.getLogger().println("inside callRun");
 
             try {
-                String results = runSalt();
+                String results = saltPerform(token, saltFunc, netapi);
                 listener.getLogger().println(results);
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -285,45 +328,13 @@ public class SaltAPIStep extends Step {
              */
         }
 
-        protected String runSalt() throws Exception, SaltException {
+        protected String saltPerform(String token, JSONObject saltFunc, String netapi) throws Exception, SaltException {
             Run<?, ?>run = getContext().get(Run.class);
             FilePath workspace = getContext().get(FilePath.class);
             TaskListener listener = getContext().get(TaskListener.class);
             Launcher launcher = getContext().get(Launcher.class);
+
             listener.getLogger().println("inside runSalt");
-
-            SaltAPIBuilder saltBuilder = new SaltAPIBuilder(saltStep.servername, saltStep.authtype, saltStep.clientInterface, saltStep.credentialsId);
-
-            listener.getLogger().println("inside runSalt 2");
-
-            StandardUsernamePasswordCredentials credential = CredentialsProvider.findCredentialById(
-                    saltBuilder.getCredentialsId(), StandardUsernamePasswordCredentials.class, run);
-            if (credential == null) {
-                throw new RuntimeException("Invalid credentials");
-            }
-
-            listener.getLogger().println("inside runSalt3");
-
-            // Setup connection for auth
-            JSONObject auth = Utils.createAuthArray(credential, saltBuilder.getAuthtype());
-
-            listener.getLogger().println("inside runSalt4");
-
-            // Get an auth token
-            ServerToken serverToken = Utils.getToken(launcher, saltBuilder.getServername(), auth);
-            String token = serverToken.getToken();
-            String netapi = serverToken.getServer();
-            LOGGER.log(Level.FINE, "Discovered netapi: " + netapi);
-
-            listener.getLogger().println("inside runSalt5");
-
-
-            // If we got this far, auth must have been good and we've got a token
-            JSONObject saltFunc = saltBuilder.prepareSaltFunction(run, listener, saltBuilder.getClientInterface().getDescriptor().getDisplayName(), saltBuilder.getTarget(), saltBuilder.getFunction(), saltBuilder.getArguments());
-            LOGGER.log(Level.FINE, "Sending JSON: " + saltFunc.toString());
-
-            listener.getLogger().println("inside runSalt6");
-
 
             JSONArray returnArray = saltBuilder.performRequest(launcher, run, token, saltBuilder.getServername(), saltFunc, listener, netapi);
             LOGGER.log(Level.FINE, "Received response: " + returnArray);
@@ -337,14 +348,9 @@ public class SaltAPIStep extends Step {
                 throw new SaltException(returnArray.toString());
             }
 
-            listener.getLogger().println("inside runSalt8");
-
-
             if (saltStep.saveFile) {
                 Utils.writeFile(returnArray.toString(), workspace);
             }
-            listener.getLogger().println("inside runSalt8");
-
 
             return returnArray.toString();
         }

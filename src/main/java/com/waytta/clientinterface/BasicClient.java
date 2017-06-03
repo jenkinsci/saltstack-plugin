@@ -6,70 +6,74 @@ import hudson.model.Descriptor;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 import hudson.DescriptorExtensionList;
+
+import java.io.Serializable;
 import java.util.List;
 import hudson.util.ListBoxModel;
 
 
-abstract public class BasicClient implements ExtensionPoint, Describable<BasicClient> {
-	public String getFunction() {
-		return "";
-	}
+abstract public class BasicClient implements ExtensionPoint, Serializable, Describable<BasicClient> {
+    private static final long serialVersionUID = 1L;
 
-	public String getArguments() {
-		return "";
-	}
+    public String getFunction() {
+        return "";
+    }
 
-	public String getTarget() {
-		return "";
-	}
+    public String getArguments() {
+        return "";
+    }
 
-	public String getTargettype() {
-		return "";
-	}
+    public String getTarget() {
+        return "";
+    }
 
-	public boolean getBlockbuild() {
-		return false;
-	}
+    public String getTargettype() {
+        return "";
+    }
 
-	public String getBatchSize() {
-		return "";
-	}
+    public boolean getBlockbuild() {
+        return false;
+    }
 
-	public int getJobPollTime() {
-		return 10;
-	}
+    public String getBatchSize() {
+        return "";
+    }
 
-	public int getMinionTimeout() {
-	    return 30;
-	}
+    public int getJobPollTime() {
+        return 10;
+    }
 
-	public String getMods() {
-		return "";
-	}
+    public int getMinionTimeout() {
+        return 30;
+    }
 
-	public String getPillarvalue() {
-		return "";
-	}
+    public String getMods() {
+        return "";
+    }
 
-	public String getSubset() {
-		return "1";
-	}
+    public String getPillarvalue() {
+        return "";
+    }
 
-	public String getTag() {
-		return "";
-	}
+    public String getSubset() {
+        return "1";
+    }
 
-	public String getPost() {
-		return "";
-	}
+    public String getTag() {
+        return "";
+    }
 
-	@Override
+    public String getPost() {
+        return "";
+    }
+
+    @Override
     public Descriptor<BasicClient> getDescriptor() {
-	    Jenkins jenkins = Jenkins.getInstance();
-	    if (jenkins == null) {
-	        throw new IllegalStateException("Jenkins has not been started, or was already shut down");
-	    }
-	    return jenkins.getDescriptorOrDie(getClass());
+        Jenkins jenkins = Jenkins.getInstance();
+        if (jenkins == null) {
+            throw new IllegalStateException("Jenkins has not been started, or was already shut down");
+        }
+        return jenkins.getDescriptorOrDie(getClass());
     }
 
     public List<BasicClientDescriptor> getClientDescriptors() {

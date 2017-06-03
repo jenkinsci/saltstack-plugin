@@ -1,6 +1,7 @@
 package com.waytta;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -61,7 +62,9 @@ import net.sf.json.JSONSerializer;
 import net.sf.json.JSONObject;
 import net.sf.json.util.JSONUtils;
 
-public class SaltAPIBuilder extends Builder implements SimpleBuildStep {
+public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializable {
+    private static final long serialVersionUID = 1L;
+
     private static final Logger LOGGER = Logger.getLogger("com.waytta.saltstack");
 
     private String servername;
