@@ -228,8 +228,6 @@ public class SaltAPIStep extends Step {
             TaskListener listener = getContext().get(TaskListener.class);
             Launcher launcher = getContext().get(Launcher.class);
 
-            listener.getLogger().println("Started saltStep");
-
             saltBuilder = new SaltAPIBuilder(saltStep.servername, saltStep.authtype, saltStep.clientInterface, saltStep.credentialsId);
 
             StandardUsernamePasswordCredentials credential = CredentialsProvider.findCredentialById(
@@ -251,8 +249,6 @@ public class SaltAPIStep extends Step {
             final JSONObject saltFunc = saltBuilder.prepareSaltFunction(run, listener, saltBuilder.getClientInterface().getDescriptor().getDisplayName(), saltBuilder.getTarget(), saltBuilder.getFunction(), saltBuilder.getArguments());
             LOGGER.log(Level.FINE, "Sending JSON: " + saltFunc.toString());
 
-            listener.getLogger().println("Finishing start");
-
             new Thread("saltAPI") {
                 @Override
                 public void run() {
@@ -270,7 +266,7 @@ public class SaltAPIStep extends Step {
 
         /*
         @Override public void onResume() {
-            callRun();
+            // TODO break out job polling logic from Builds.runBlockingBuild
         }
          */
 
@@ -282,7 +278,6 @@ public class SaltAPIStep extends Step {
                 LOGGER.log(Level.WARNING, null, x);
                 listener = TaskListener.NULL;
             }
-            listener.getLogger().println("inside callRun");
 
             try {
                 String results = saltPerform(token, saltFunc, netapi);
@@ -291,28 +286,6 @@ public class SaltAPIStep extends Step {
                 throw new RuntimeException(e);
             }
             getContext().onSuccess(null);
-            /*
-            task = Timer.get().schedule(new Runnable() {
-                @Override
-                public void run(){
-                    TaskListener listener;
-                    try {
-                        listener = getContext().get(TaskListener.class);
-                    } catch (Exception x) {
-                        LOGGER.log(Level.WARNING, null, x);
-                        listener = TaskListener.NULL;
-                    }
-                    listener.getLogger().println("running");
-                    try {
-                        String results = runSalt();
-                        listener.getLogger().println(results);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                    getContext().onSuccess(null);
-                }
-            }, 5, TimeUnit.SECONDS);
-             */
         }
 
         protected String saltPerform(String token, JSONObject saltFunc, String netapi) throws Exception, SaltException {
@@ -321,12 +294,8 @@ public class SaltAPIStep extends Step {
             TaskListener listener = getContext().get(TaskListener.class);
             Launcher launcher = getContext().get(Launcher.class);
 
-            listener.getLogger().println("inside runSalt");
-
             JSONArray returnArray = saltBuilder.performRequest(launcher, run, token, saltBuilder.getServername(), saltFunc, listener, netapi);
             LOGGER.log(Level.FINE, "Received response: " + returnArray);
-
-            listener.getLogger().println("inside runSalt7");
 
             // Check for error and print out results
             boolean validFunctionExecution = Utils.validateFunctionCall(returnArray);
