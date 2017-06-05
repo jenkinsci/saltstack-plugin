@@ -271,21 +271,12 @@ public class SaltAPIStep extends Step {
          */
 
         private void callRun(String token, JSONObject saltFunc, String netapi) {
-            TaskListener listener;
-            try {
-                listener = getContext().get(TaskListener.class);
-            } catch (Exception x) {
-                LOGGER.log(Level.WARNING, null, x);
-                listener = TaskListener.NULL;
-            }
-
             try {
                 String results = saltPerform(token, saltFunc, netapi);
-                listener.getLogger().println(results);
+                getContext().onSuccess(results);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-            getContext().onSuccess(null);
         }
 
         protected String saltPerform(String token, JSONObject saltFunc, String netapi) throws Exception, SaltException {
