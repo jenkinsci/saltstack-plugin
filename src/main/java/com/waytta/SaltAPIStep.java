@@ -240,6 +240,46 @@ public class SaltAPIStep extends Step implements Serializable {
             return false;
         }
 
+        @Override public void onResume() {
+            TaskListener listener = null;
+            Launcher launcher = null;
+            FilePath workspace = null;
+            try {
+                listener = getContext().get(TaskListener.class);
+                launcher = getContext().get(Launcher.class);
+                workspace = getContext().get(FilePath.class);
+            } catch (Exception e) {
+                Execution.this.getContext().onFailure(e);
+            }
+
+            // Fail out if missing jid
+            if (jid == null || jid.equals("")) {
+                throw new RuntimeException("Unable to resume. Missing JID.");
+            }
+
+            listener.getLogger().println("Resuming jid: " + jid);
+
+            // Auth to salt-api
+            try {
+                prepareRun();
+            } catch (Exception e) {
+                Execution.this.getContext().onFailure(e);
+            }
+
+            // Poll for completion
+            int jobPollTime = saltBuilder.getJobPollTime();
+            int minionTimeout = saltBuilder.getMinionTimeout();
+            JSONArray returnArray = null;
+            try {
+                returnArray = Builds.checkBlockingBuild(launcher, saltBuilder.getServername(), token, saltFunc, listener, jobPollTime, minionTimeout, netapi, jid);
+            } catch (Exception e) {
+                Execution.this.getContext().onFailure(e);
+            }
+
+            // Verify and return result
+            postRun(returnArray);
+        }
+
         private void prepareRun() throws InterruptedException, IOException{
             Run<?, ?>run = getContext().get(Run.class);
             TaskListener listener = getContext().get(TaskListener.class);
@@ -267,39 +307,31 @@ public class SaltAPIStep extends Step implements Serializable {
             LOGGER.log(Level.FINE, "Sending JSON: " + saltFunc.toString());
         }
 
+        private void saltPerform(String token, JSONObject saltFunc, String netapi) throws Exception, SaltException {
+            Run<?, ?>run = getContext().get(Run.class);
+            FilePath workspace = getContext().get(FilePath.class);
+            TaskListener listener = getContext().get(TaskListener.class);
+            Launcher launcher = getContext().get(Launcher.class);
 
-        @Override public void onResume() {
+            JSONArray returnArray = null;
+            if (jid != null && !jid.equals("")) {
+                returnArray = Builds.checkBlockingBuild(launcher, saltBuilder.getServername(), token, saltFunc, listener, saltBuilder.getJobPollTime(), saltBuilder.getMinionTimeout(), netapi, jid);
+            } else {
+                returnArray = saltBuilder.performRequest(launcher, run, token, saltBuilder.getServername(), saltFunc, listener, netapi);
+            }
+            postRun(returnArray);
+        }
+
+        private void postRun(JSONArray returnArray) {
             TaskListener listener = null;
-            Launcher launcher = null;
             FilePath workspace = null;
             try {
                 listener = getContext().get(TaskListener.class);
-                launcher = getContext().get(Launcher.class);
                 workspace = getContext().get(FilePath.class);
             } catch (Exception e) {
                 Execution.this.getContext().onFailure(e);
             }
 
-            if (jid == null || jid.equals("")) {
-                throw new RuntimeException("Unable to resume. Missing JID.");
-            }
-
-            listener.getLogger().println("Resuming jid: " + jid);
-
-            try {
-                prepareRun();
-            } catch (Exception e) {
-                Execution.this.getContext().onFailure(e);
-            }
-
-            int jobPollTime = saltBuilder.getJobPollTime();
-            int minionTimeout = saltBuilder.getMinionTimeout();
-            JSONArray returnArray = null;
-            try {
-                returnArray = Builds.checkBlockingBuild(launcher, saltBuilder.getServername(), token, saltFunc, listener, jobPollTime, minionTimeout, netapi, jid);
-            } catch (Exception e) {
-                Execution.this.getContext().onFailure(e);
-            }
             LOGGER.log(Level.FINE, "Received response: " + returnArray);
 
             // Check for error and print out results
@@ -317,37 +349,8 @@ public class SaltAPIStep extends Step implements Serializable {
                 }
             }
 
+            // Return results
             getContext().onSuccess(returnArray.toString());
-        }
-
-
-
-        private String saltPerform(String token, JSONObject saltFunc, String netapi) throws Exception, SaltException {
-            Run<?, ?>run = getContext().get(Run.class);
-            FilePath workspace = getContext().get(FilePath.class);
-            TaskListener listener = getContext().get(TaskListener.class);
-            Launcher launcher = getContext().get(Launcher.class);
-
-            JSONArray returnArray = null;
-            if (jid != null && !jid.equals("")) {
-                returnArray = Builds.checkBlockingBuild(launcher, saltBuilder.getServername(), token, saltFunc, listener, saltBuilder.getJobPollTime(), saltBuilder.getMinionTimeout(), netapi, jid);
-            } else {
-                returnArray = saltBuilder.performRequest(launcher, run, token, saltBuilder.getServername(), saltFunc, listener, netapi);
-            }
-            LOGGER.log(Level.FINE, "Received response: " + returnArray);
-
-            // Check for error and print out results
-            boolean validFunctionExecution = Utils.validateFunctionCall(returnArray);
-            if (!validFunctionExecution) {
-                listener.error("One or more minion did not return code 0\n");
-                throw new SaltException(returnArray.toString());
-            }
-
-            if (saltStep.saveFile) {
-                Utils.writeFile(returnArray.toString(), workspace);
-            }
-
-            return returnArray.toString();
         }
     }
 
