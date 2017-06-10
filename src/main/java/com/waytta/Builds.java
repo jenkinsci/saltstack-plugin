@@ -124,29 +124,34 @@ public class Builds {
         return returnArray;
     }
 
-    public static JSONArray runBlockingBuild(Launcher launcher, Run build, String myservername,
-            String token, JSONObject saltFunc, TaskListener listener, int pollTime, int minionTimeout, String netapi)
+    public static String getBlockingBuildJid(Launcher launcher, String myservername,
+            String token, JSONObject saltFunc, TaskListener listener)
                     throws IOException, InterruptedException, SaltException {
-        JSONArray returnArray = new JSONArray();
-        JSONObject httpResponse = new JSONObject();
-        String jid = "";
+        String jid = null;
         // Send request to /minion url. This will give back a jid which we
         // will need to poll and lookup for completion
-        httpResponse = launcher.getChannel().call(new HttpCallable(myservername + "/minions", saltFunc, token));
-        returnArray = httpResponse.getJSONArray("return");
+        JSONObject httpResponse = launcher.getChannel().call(new HttpCallable(myservername + "/minions", saltFunc, token));
+        JSONArray returnArray = httpResponse.getJSONArray("return");
         for (Object o : returnArray) {
             JSONObject line = (JSONObject) o;
             jid = line.getString("jid");
         }
         // Print out success
         listener.getLogger().println("Running jid: " + jid);
+        return jid;
+    }
 
+    public static JSONArray checkBlockingBuild(Launcher launcher, String myservername, String token,
+            JSONObject saltFunc, TaskListener listener, int pollTime, int minionTimeout, String netapi, String jid)
+                    throws IOException, InterruptedException, SaltException {
         // Request successfully sent. Now use jid to check if job complete
         int numMinions = 0;
         int numMinionsDone = 0;
         JSONArray minionsArray = new JSONArray();
         JSONObject resultObject = new JSONObject();
         JSONArray httpArray = new JSONArray();
+        JSONArray returnArray = new JSONArray();
+        JSONObject httpResponse = new JSONObject();
         httpResponse = launcher.getChannel().call(new HttpCallable(myservername + "/jobs/" + jid, null, token));
         httpArray = returnData(httpResponse, netapi);
         for (Object o : httpArray) {

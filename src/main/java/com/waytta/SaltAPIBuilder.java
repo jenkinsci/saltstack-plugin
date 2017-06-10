@@ -174,7 +174,6 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializ
         return clientInterface.getTag();
     }
 
-
     @Override
     public void perform(Run<?, ?> build, FilePath workspace, Launcher launcher, TaskListener listener)
             throws InterruptedException, IOException {
@@ -262,6 +261,13 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializ
         }
     }
 
+    public String getJID(Launcher launcher, String serverName, String token, JSONObject saltFunc, TaskListener listener) throws IOException, InterruptedException, SaltException {
+        if (saltFunc.get("client").equals("local_async")) {
+            return Builds.getBlockingBuildJid(launcher, serverName, token, saltFunc, listener);
+        }
+        return null;
+    }
+
     public JSONArray performRequest(Launcher launcher, Run build, String token, String serverName, JSONObject saltFunc, TaskListener listener, String netapi)
             throws InterruptedException, IOException, SaltException {
         JSONArray returnArray = new JSONArray();
@@ -280,7 +286,8 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializ
             int jobPollTime = getJobPollTime();
             int minionTimeout = getMinionTimeout();
             // poll /minion for response
-            returnArray = Builds.runBlockingBuild(launcher, build, serverName, token, saltFunc, listener, jobPollTime, minionTimeout, netapi);
+            String jid = getJID(launcher, serverName, token, saltFunc, listener);
+            returnArray = Builds.checkBlockingBuild(launcher, serverName, token, saltFunc, listener, jobPollTime, minionTimeout, netapi, jid);
         } else {
             // Just send a salt request to /. Don't wait for reply
             httpResponse = launcher.getChannel().call(new HttpCallable(serverName, saltFunc, token));

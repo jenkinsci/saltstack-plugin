@@ -4,6 +4,8 @@ import com.waytta.SaltException;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.io.IOException;
+import java.io.Serializable;
 import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
 import javax.inject.Inject;
@@ -32,7 +34,7 @@ import com.waytta.clientinterface.BasicClient;
 
 import com.google.common.collect.ImmutableSet;
 
-public class SaltAPIStep extends Step {
+public class SaltAPIStep extends Step implements Serializable {
     private static final Logger LOGGER = Logger.getLogger("com.waytta.saltstack");
 
     private String servername;
@@ -41,6 +43,9 @@ public class SaltAPIStep extends Step {
     private boolean saveEnvVar = false;
     private final String credentialsId;
     private boolean saveFile = false;
+    private static String token = null;
+    private static String netapi = null;
+    private static JSONObject saltFunc = null;
 
     @DataBoundConstructor
     public SaltAPIStep(String servername, String authtype, BasicClient clientInterface, String credentialsId) {
@@ -187,23 +192,13 @@ public class SaltAPIStep extends Step {
         return new Execution(this, context);
     }
 
-    public static class Execution extends AbstractStepExecutionImpl {
+    public class Execution extends AbstractStepExecutionImpl {
         private static final long serialVersionUID = 1L;
 
+        private String jid;
+
         @Inject
-        private transient SaltAPIStep saltStep;
-
-        @StepContextParameter
-        private transient Run<?, ?> run;
-
-        @StepContextParameter
-        private transient FilePath workspace;
-
-        @StepContextParameter
-        private transient TaskListener listener;
-
-        @StepContextParameter
-        private transient Launcher launcher;
+        private SaltAPIStep saltStep;
 
         private transient volatile ScheduledFuture<?> task;
 
@@ -224,6 +219,28 @@ public class SaltAPIStep extends Step {
 
         @Override
         public boolean start() throws Exception {
+            Launcher launcher = getContext().get(Launcher.class);
+            TaskListener listener = getContext().get(TaskListener.class);
+
+            prepareRun();
+            jid = saltBuilder.getJID(launcher, saltBuilder.getServername(), token, saltFunc, listener);
+
+            new Thread("saltAPI") {
+                @Override
+                public void run() {
+                    try {
+                        saltPerform(token, saltFunc, netapi);
+                    }
+                    catch (Exception e) {
+                        Execution.this.getContext().onFailure(e);
+                    }
+                }
+            }.start();
+
+            return false;
+        }
+
+        private void prepareRun() throws InterruptedException, IOException{
             Run<?, ?>run = getContext().get(Run.class);
             TaskListener listener = getContext().get(TaskListener.class);
             Launcher launcher = getContext().get(Launcher.class);
@@ -241,51 +258,82 @@ public class SaltAPIStep extends Step {
 
             // Get an auth token
             ServerToken serverToken = Utils.getToken(launcher, saltBuilder.getServername(), auth);
-            final String token = serverToken.getToken();
-            final String netapi = serverToken.getServer();
+            token = serverToken.getToken();
+            netapi = serverToken.getServer();
             LOGGER.log(Level.FINE, "Discovered netapi: " + netapi);
 
             // If we got this far, auth must have been good and we've got a token
-            final JSONObject saltFunc = saltBuilder.prepareSaltFunction(run, listener, saltBuilder.getClientInterface().getDescriptor().getDisplayName(), saltBuilder.getTarget(), saltBuilder.getFunction(), saltBuilder.getArguments());
+            saltFunc = saltBuilder.prepareSaltFunction(run, listener, saltBuilder.getClientInterface().getDescriptor().getDisplayName(), saltBuilder.getTarget(), saltBuilder.getFunction(), saltBuilder.getArguments());
             LOGGER.log(Level.FINE, "Sending JSON: " + saltFunc.toString());
-
-            new Thread("saltAPI") {
-                @Override
-                public void run() {
-                    try {
-                        callRun(token, saltFunc, netapi);
-                    }
-                    catch (Exception e) {
-                        Execution.this.getContext().onFailure(e);
-                    }
-                }
-            }.start();
-
-            return false;
         }
 
-        /*
+
         @Override public void onResume() {
-            // TODO break out job polling logic from Builds.runBlockingBuild
-        }
-         */
-
-        private void callRun(String token, JSONObject saltFunc, String netapi) {
+            TaskListener listener = null;
+            Launcher launcher = null;
+            FilePath workspace = null;
             try {
-                String results = saltPerform(token, saltFunc, netapi);
-                getContext().onSuccess(results);
+                listener = getContext().get(TaskListener.class);
+                launcher = getContext().get(Launcher.class);
+                workspace = getContext().get(FilePath.class);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                Execution.this.getContext().onFailure(e);
             }
+
+            if (jid == null || jid.equals("")) {
+                throw new RuntimeException("Unable to resume. Missing JID.");
+            }
+
+            listener.getLogger().println("Resuming jid: " + jid);
+
+            try {
+                prepareRun();
+            } catch (Exception e) {
+                Execution.this.getContext().onFailure(e);
+            }
+
+            int jobPollTime = saltBuilder.getJobPollTime();
+            int minionTimeout = saltBuilder.getMinionTimeout();
+            JSONArray returnArray = null;
+            try {
+                returnArray = Builds.checkBlockingBuild(launcher, saltBuilder.getServername(), token, saltFunc, listener, jobPollTime, minionTimeout, netapi, jid);
+            } catch (Exception e) {
+                Execution.this.getContext().onFailure(e);
+            }
+            LOGGER.log(Level.FINE, "Received response: " + returnArray);
+
+            // Check for error and print out results
+            boolean validFunctionExecution = Utils.validateFunctionCall(returnArray);
+            if (!validFunctionExecution) {
+                listener.error("One or more minion did not return code 0\n");
+                Execution.this.getContext().onFailure(new SaltException(returnArray.toString()));
+            }
+
+            if (saltStep.saveFile) {
+                try {
+                    Utils.writeFile(returnArray.toString(), workspace);
+                } catch (Exception e) {
+                    Execution.this.getContext().onFailure(e);
+                }
+            }
+
+            getContext().onSuccess(returnArray.toString());
         }
 
-        protected String saltPerform(String token, JSONObject saltFunc, String netapi) throws Exception, SaltException {
+
+
+        private String saltPerform(String token, JSONObject saltFunc, String netapi) throws Exception, SaltException {
             Run<?, ?>run = getContext().get(Run.class);
             FilePath workspace = getContext().get(FilePath.class);
             TaskListener listener = getContext().get(TaskListener.class);
             Launcher launcher = getContext().get(Launcher.class);
 
-            JSONArray returnArray = saltBuilder.performRequest(launcher, run, token, saltBuilder.getServername(), saltFunc, listener, netapi);
+            JSONArray returnArray = null;
+            if (jid != null && !jid.equals("")) {
+                returnArray = Builds.checkBlockingBuild(launcher, saltBuilder.getServername(), token, saltFunc, listener, saltBuilder.getJobPollTime(), saltBuilder.getMinionTimeout(), netapi, jid);
+            } else {
+                returnArray = saltBuilder.performRequest(launcher, run, token, saltBuilder.getServername(), saltFunc, listener, netapi);
+            }
             LOGGER.log(Level.FINE, "Received response: " + returnArray);
 
             // Check for error and print out results
