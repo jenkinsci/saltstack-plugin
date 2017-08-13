@@ -42,8 +42,6 @@ public class Builds {
                     }
                 }
 
-                System.out.println("Checking argument: " + arg + " isKW: " + isKW.toString());
-
                 // if string wrapped in quotes, remove them since adding to list
                 // re-quotes
                 arg = arg.replaceAll("(^')|(^\")|('$)|(\"$)", "");
