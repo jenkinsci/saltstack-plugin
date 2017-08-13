@@ -8,6 +8,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang.StringUtils;
 
 import hudson.model.TaskListener;
+import hudson.Launcher;
 import net.sf.json.JSON;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONException;
