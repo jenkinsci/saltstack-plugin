@@ -1,37 +1,37 @@
 package com.waytta;
 
-import java.util.Map;
-import java.util.HashMap;
-import java.io.IOException;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
-import org.junit.Test;
 import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mock;
 
-import net.sf.json.JSONArray;
-import hudson.model.TaskListener;
-import hudson.util.FormValidation;
 import hudson.EnvVars;
 import hudson.model.Run;
+import hudson.model.TaskListener;
+import hudson.util.FormValidation;
+import net.sf.json.JSONArray;
 
-import static org.mockito.Mockito.mock;
-import org.mockito.Mock;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
 
-import org.jvnet.hudson.test.HudsonTestCase;
-
-public class UtilsTest extends HudsonTestCase {
+public class UtilsTest {
     @Test
-    public static void testValidPillar() {
+    public void testValidPillar() {
         String value = "{\"key\": \"value\"}";
         FormValidation formValidation = Utils.validatePillar(value);
         assertEquals(FormValidation.Kind.OK, formValidation.kind);
     }
 
     @Test
-    public static void testInvalidPillar() {
+    public void testInvalidPillar() {
         String value = "{\"key\": value}";
         FormValidation formValidation = Utils.validatePillar(value);
         assertEquals(FormValidation.Kind.ERROR, formValidation.kind);
@@ -79,7 +79,6 @@ public class UtilsTest extends HudsonTestCase {
     @Mock
     Run jenkinsBuildMock;
 
-    @Override
     @Before
     public void setUp() throws Exception {
         jenkinsBuildMock = mock(Run.class);
