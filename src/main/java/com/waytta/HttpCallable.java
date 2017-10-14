@@ -53,7 +53,7 @@ class HttpCallable extends MasterToSlaveCallable<JSONObject, IOException> {
                         connection.setDoOutput(true);
                         connection.setRequestProperty("Content-Type", "application/json");
                     }
-                    connection.setConnectTimeout(5000); // set timeout to 5 seconds
+                    connection.setConnectTimeout(30000); // set timeout to 5 seconds
                     if (auth != null && !auth.isEmpty()) {
                         connection.setRequestProperty("X-Auth-Token", auth);
                     }
