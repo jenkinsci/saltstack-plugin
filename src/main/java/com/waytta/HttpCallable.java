@@ -17,21 +17,23 @@ import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
 
-class HttpCallable extends MasterToSlaveCallable<JSONObject, IOException> {
+class HttpCallable extends MasterToSlaveCallable<String, IOException> {
     private static final long serialVersionUID = 1L;
     private String targetURL;
-    private JSONObject urlParams;
+    private String urlParamsS;
     private String auth;
 
     public HttpCallable(String targetURL, JSONObject urlParams, String auth) {
         this.targetURL = targetURL;
-        this.urlParams = urlParams;
+        this.urlParamsS = urlParams.toString();
         this.auth = auth;
     }
 
     @Override
-    public JSONObject call() throws IOException {
+    public String call() throws IOException {
         final Logger LOGGER = Logger.getLogger("com.waytta.saltstack");
+
+        JSONObject urlParams = (JSONObject) JSONSerializer.toJSON(urlParamsS);
 
         HttpURLConnection connection = null;
         JSONObject responseJSON = new JSONObject();
@@ -133,7 +135,7 @@ class HttpCallable extends MasterToSlaveCallable<JSONObject, IOException> {
                 serverHeader = connection.getHeaderField("Server");
                 responseJSON.element("server", serverHeader);
             }
-            return responseJSON;
+            return responseJSON.toString();
         } finally {
             if (connection != null) {
                 connection.disconnect();

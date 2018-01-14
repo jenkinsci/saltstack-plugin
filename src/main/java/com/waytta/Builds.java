@@ -148,7 +148,7 @@ public class Builds {
         String jid = null;
         // Send request to /minion url. This will give back a jid which we
         // will need to poll and lookup for completion
-        JSONObject httpResponse = launcher.getChannel().call(new HttpCallable(myservername + "/minions", saltFunc, token));
+        JSONObject httpResponse = (JSONObject) JSONSerializer.toJSON(launcher.getChannel().call(new HttpCallable(myservername + "/minions", saltFunc, token)));
         JSONArray returnArray = httpResponse.getJSONArray("return");
         for (Object o : returnArray) {
             JSONObject line = (JSONObject) o;
@@ -173,7 +173,7 @@ public class Builds {
         JSONArray httpArray = new JSONArray();
         JSONArray returnArray = new JSONArray();
         JSONObject httpResponse = new JSONObject();
-        httpResponse = launcher.getChannel().call(new HttpCallable(myservername + "/jobs/" + jid, null, token));
+        httpResponse = (JSONObject) JSONSerializer.toJSON(launcher.getChannel().call(new HttpCallable(myservername + "/jobs/" + jid, null, token)));
         httpArray = returnData(httpResponse, netapi);
         for (Object o : httpArray) {
             JSONObject line = (JSONObject) o;
@@ -204,7 +204,7 @@ public class Builds {
                 // Allow user to cancel job in jenkins interface
                 throw new InterruptedException();
             }
-            httpResponse = launcher.getChannel().call(new HttpCallable(myservername + "/jobs/" + jid, null, token));
+            httpResponse = (JSONObject) JSONSerializer.toJSON(launcher.getChannel().call(new HttpCallable(myservername + "/jobs/" + jid, null, token)));
             httpArray = returnData(httpResponse, netapi);
             numMinionsDone = returnedMinions(httpArray);
 
@@ -225,7 +225,7 @@ public class Builds {
                     int numberChecksRemain = minionTimeout % pollTime;
                     // Check every pollTime seconds until minionTimeout.
                     for (int i=0; i<numberChecks; i++) {
-                        httpResponse = launcher.getChannel().call(new HttpCallable(myservername + "/jobs/" + jid, null, token));
+                        httpResponse = (JSONObject) JSONSerializer.toJSON(launcher.getChannel().call(new HttpCallable(myservername + "/jobs/" + jid, null, token)));
                         httpArray = returnData(httpResponse, netapi);
                         numMinionsDone = returnedMinions(httpArray);
                         if (numMinionsDone >= numMinions) {
@@ -245,7 +245,7 @@ public class Builds {
                     // Allow user to cancel job in jenkins interface
                     throw new InterruptedException();
                 }
-                httpResponse = launcher.getChannel().call(new HttpCallable(myservername + "/jobs/" + jid, null, token));
+                httpResponse = (JSONObject) JSONSerializer.toJSON(launcher.getChannel().call(new HttpCallable(myservername + "/jobs/" + jid, null, token)));
                 httpArray = returnData(httpResponse, netapi);
                 numMinionsDone = returnedMinions(httpArray);
                 if (numMinionsDone < numMinions) {
