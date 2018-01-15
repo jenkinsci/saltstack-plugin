@@ -25,7 +25,10 @@ class HttpCallable extends MasterToSlaveCallable<String, IOException> {
 
     public HttpCallable(String targetURL, JSONObject urlParams, String auth) {
         this.targetURL = targetURL;
-        this.urlParamsS = urlParams.toString();
+        this.urlParamsS = null;
+        if (urlParams != null) {
+            this.urlParamsS = urlParams.toString();
+        }
         this.auth = auth;
     }
 
@@ -33,7 +36,10 @@ class HttpCallable extends MasterToSlaveCallable<String, IOException> {
     public String call() throws IOException {
         final Logger LOGGER = Logger.getLogger("com.waytta.saltstack");
 
-        JSONObject urlParams = (JSONObject) JSONSerializer.toJSON(urlParamsS);
+        JSONObject urlParams = null;
+        if (urlParamsS != null) { 
+            urlParams = (JSONObject) JSONSerializer.toJSON(urlParamsS);
+        }
 
         HttpURLConnection connection = null;
         JSONObject responseJSON = new JSONObject();
