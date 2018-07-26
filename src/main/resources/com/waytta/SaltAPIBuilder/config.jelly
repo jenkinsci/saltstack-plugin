@@ -11,6 +11,8 @@
 
   <f:entry title="Auth Type" field="authtype">
     <select name="authtype">
+      <f:option value="auto" selected="${instance.authtype == 'auto'}">auto</f:option>
+      <f:option value="file" selected="${instance.authtype == 'file'}">file</f:option>
       <f:option value="pam" selected="${instance.authtype == 'pam'}">pam</f:option>
       <f:option value="ldap" selected="${instance.authtype == 'ldap'}">ldap</f:option>
     </select>
