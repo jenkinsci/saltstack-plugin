@@ -159,7 +159,7 @@ public class SaltAPIStep extends Step implements Serializable {
     @Extension
     public static final class DescriptorImpl extends StepDescriptor {
 
-        String apiVersion = "2018.3";
+        String apiVersion = "2017.7";
 
         public DescriptorImpl() {
             load();

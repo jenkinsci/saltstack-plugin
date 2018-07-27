@@ -4,7 +4,7 @@
   <f:section title="SaltStack API">
       <f:entry title="SaltAPI version" description="Version of the SaltAPI in use">
       <select name="apiVersion">
-        <f:option value="2018.3" selected="${instance.apiVersion == '2018.3'}">2018.3</f:option>
+        <f:option value="2017.7" selected="${instance.apiVersion == '2017.7'}">2017.7</f:option>
         <f:option value="older" selected="${instance.apiVersion == 'older'}">older</f:option>
       </select>
     </f:entry>

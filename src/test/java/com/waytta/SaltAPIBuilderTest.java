@@ -116,7 +116,7 @@ public class SaltAPIBuilderTest {
                 + "}");
 
         JSONObject result = saltAPIBuilder.prepareSaltFunction(jenkinsBuild, buildListener, myClientInterface, target,
-                function, arguments, "2018.3", targettype);
+                function, arguments, "2017.7", targettype);
         assertEquals(testObject, result);
     }
 
@@ -167,7 +167,7 @@ public class SaltAPIBuilderTest {
                 + "}");
 
         JSONObject result = saltAPIBuilder.prepareSaltFunction(jenkinsBuild, buildListener, myClientInterface, target,
-                function, arguments, "2018.3", targettype);
+                function, arguments, "2017.7", targettype);
         assertEquals(testObject, result);
     }
 
@@ -228,7 +228,7 @@ public class SaltAPIBuilderTest {
                 + "}");
 
         JSONObject result = saltAPIBuilder.prepareSaltFunction(jenkinsBuild, buildListener, myClientInterface, target,
-                function, arguments, "2018.3", targettype);
+                function, arguments, "2017.7", targettype);
         assertEquals(testObject, result);
     }
 
@@ -280,7 +280,7 @@ public class SaltAPIBuilderTest {
                 + "\"kwarg\":{}" + "}");
 
         JSONObject result = saltAPIBuilder.prepareSaltFunction(jenkinsBuild, buildListener, myClientInterface, target,
-                function, arguments, "2018.3", targettype);
+                function, arguments, "2017.7", targettype);
         assertEquals(testObject, result);
     }
 

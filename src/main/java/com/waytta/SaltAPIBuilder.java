@@ -371,7 +371,7 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializ
         String tgt_key = "tgt_type";
 
         switch (myApiVersion) {
-        case "2018.3":
+        case "2017.7":
             if (myfunction.startsWith("cmd.") || myfunction.startsWith("cmd_sync.")) {
                 // cmd.run and cmd_sync functions have expanded output as of 2017.7
                 saltFunc.put("full_return", true);
@@ -448,7 +448,7 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializ
         int pollTime = 10;
         int minionTimeout = 30;
         String outputFormat = "json";
-        String apiVersion = "2018.3";
+        String apiVersion = "2017.7";
 
         public DescriptorImpl() {
             load();
