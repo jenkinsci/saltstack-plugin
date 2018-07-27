@@ -159,6 +159,12 @@ public class SaltAPIStep extends Step implements Serializable {
     @Extension
     public static final class DescriptorImpl extends StepDescriptor {
 
+        String apiVersion = "2018.3";
+
+        public DescriptorImpl() {
+            load();
+        }
+
         @Override
         public String getFunctionName() {
             return "salt";
@@ -167,6 +173,10 @@ public class SaltAPIStep extends Step implements Serializable {
         @Override
         public String getDisplayName() {
             return "Send a message to Salt API";
+        }
+
+        public String getApiVersion() {
+            return apiVersion;
         }
 
         public FormValidation doCheckServername(@QueryParameter String value) {
@@ -313,7 +323,7 @@ public class SaltAPIStep extends Step implements Serializable {
             LOGGER.log(Level.FINE, "Discovered netapi: " + netapi);
 
             // If we got this far, auth must have been good and we've got a token
-            saltFunc = saltBuilder.prepareSaltFunction(run, listener, saltBuilder.getClientInterface().getDescriptor().getDisplayName(), saltBuilder.getTarget(), saltBuilder.getFunction(), saltBuilder.getArguments());
+            saltFunc = saltBuilder.prepareSaltFunction(run, listener, saltBuilder.getClientInterface().getDescriptor().getDisplayName(), saltBuilder.getTarget(), saltBuilder.getFunction(), saltBuilder.getArguments(), saltBuilder.getDescriptor().getApiVersion(), saltBuilder.getTargettype());
             LOGGER.log(Level.FINE, "Sending JSON: " + saltFunc.toString());
         }
 

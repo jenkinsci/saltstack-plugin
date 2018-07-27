@@ -237,6 +237,7 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializ
     public void perform(Run<?, ?> build, FilePath workspace, Launcher launcher, TaskListener listener)
             throws InterruptedException, IOException {
         String myOutputFormat = getDescriptor().getOutputFormat();
+        String myApiVersion = getDescriptor().getApiVersion();
         String myClientInterface = clientInterface.getDescriptor().getDisplayName();
         String myservername = Utils.paramorize(build, listener, servername);
         String mytarget = Utils.paramorize(build, listener, getTarget());
@@ -263,7 +264,7 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializ
         LOGGER.log(Level.FINE, "Discovered netapi: " + netapi);
 
         // If we got this far, auth must have been good and we've got a token
-        JSONObject saltFunc = prepareSaltFunction(build, listener, myClientInterface, mytarget, myfunction, myarguments);
+        JSONObject saltFunc = prepareSaltFunction(build, listener, myClientInterface, mytarget, myfunction, myarguments, myApiVersion, getTargettype());
         LOGGER.log(Level.FINE, "Sending JSON: " + saltFunc.toString());
 
         JSONArray returnArray;
@@ -364,14 +365,27 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializ
     }
 
     public JSONObject prepareSaltFunction(Run build, TaskListener listener, String myClientInterface, String mytarget,
-            String myfunction, String myarguments) throws IOException, InterruptedException {
+            String myfunction, String myarguments, String myApiVersion, String targetType) throws IOException, InterruptedException {
         JSONObject saltFunc = new JSONObject();
         saltFunc.put("client", myClientInterface);
+        String tgt_key = "tgt_type";
+
+        switch (myApiVersion) {
+        case "2018.3":
+            if (myfunction.startsWith("cmd.") || myfunction.startsWith("cmd_sync.")) {
+                // cmd.run and cmd_sync functions have expanded output as of 2017.7
+                saltFunc.put("full_return", true);
+            }
+            break;
+        case "older":
+            tgt_key = "expr_form";
+            break;
+        }
 
         switch (myClientInterface) {
         case "local":
             saltFunc.put("tgt", mytarget);
-            saltFunc.put("expr_form", getTargettype());
+            saltFunc.put(tgt_key, targetType);
             if (getBlockbuild()) {
                 // when sending to the /minion endpoint, use local_async instead of just local
                 saltFunc.element("client", "local_async");
@@ -379,7 +393,7 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializ
             break;
         case "local_batch":
             saltFunc.put("tgt", mytarget);
-            saltFunc.put("expr_form", getTargettype());
+            saltFunc.put(tgt_key, targetType);
             String mybatch = Utils.paramorize(build, listener, getBatchSize());
             saltFunc.put("batch", mybatch);
             listener.getLogger().println("Running in batch mode. Batch size: " + mybatch);
@@ -398,7 +412,7 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializ
             break;
         case "local_subset":
             saltFunc.put("tgt", mytarget);
-            saltFunc.put("expr_form", getTargettype());
+            saltFunc.put(tgt_key, targetType);
             String mySubset = Utils.paramorize(build, listener, getSubset());
             saltFunc.put("sub", Integer.parseInt(mySubset));
             listener.getLogger().println("Running in subset mode. Subset size: " + mySubset);
@@ -434,6 +448,7 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializ
         int pollTime = 10;
         int minionTimeout = 30;
         String outputFormat = "json";
+        String apiVersion = "2018.3";
 
         public DescriptorImpl() {
             load();
@@ -451,6 +466,7 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializ
                 minionTimeout = 30;
             }
             outputFormat = formData.getString("outputFormat");
+            apiVersion = formData.getString("apiVersion");
             save();
             return super.configure(req, formData);
         }
@@ -465,6 +481,10 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializ
 
         public String getOutputFormat() {
             return outputFormat;
+        }
+
+        public String getApiVersion() {
+            return apiVersion;
         }
 
         public static FormValidation doTestConnection(
