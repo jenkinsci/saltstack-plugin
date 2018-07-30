@@ -76,7 +76,7 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializ
                     ((LocalClient) clientInterface).setJobPollTime(clientInterfaces.getInt("jobPollTime"));
                     ((LocalClient) clientInterface).setBlockbuild(clientInterfaces.getBoolean("blockbuild"));
                 } else if (clientInterfaces.getString("clientInterface").equals("local_batch")) {
-                    clientInterface = new LocalBatchClient(function, arguments + " " + kwarguments, batchSize, target, targettype);
+                    clientInterface = new LocalBatchClient(function, arguments + " " + kwarguments, batchSize, "", target, targettype);
                 } else if (clientInterfaces.getString("clientInterface").equals("runner")) {
                     clientInterface = new RunnerClient(function, arguments + " " + kwarguments, mods, pillarvalue);
                 }
@@ -168,6 +168,10 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializ
 
     public String getBatchSize() {
         return clientInterface.getBatchSize();
+    }
+    
+    public String getBatchWait() {
+        return clientInterface.getBatchWait();
     }
 
     public int getJobPollTime() {
@@ -379,10 +383,16 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializ
             break;
         case "local_batch":
             saltFunc.put("tgt", mytarget);
-            saltFunc.put("expr_form", getTargettype());
+            saltFunc.put("tgt_type", getTargettype());
             String mybatch = Utils.paramorize(build, listener, getBatchSize());
             saltFunc.put("batch", mybatch);
-            listener.getLogger().println("Running in batch mode. Batch size: " + mybatch);
+            String mybatchWait = getBatchWait();
+            // Only support batch_wait if specified
+            if (mybatchWait != null && !mybatchWait.isEmpty()) {
+                mybatchWait = Utils.paramorize(build, listener, mybatchWait);
+                saltFunc.put("batch_wait", mybatchWait);
+            }
+            listener.getLogger().println("Running in batch mode. Batch size: " + mybatch + " Batch wait: " + mybatchWait);
             break;
         case "runner":
             String myMods = getMods();

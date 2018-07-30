@@ -87,6 +87,10 @@ public class SaltAPIStep extends Step implements Serializable {
     public String getBatchSize() {
         return clientInterface.getBatchSize();
     }
+    
+    public String getBatchWait() {
+        return clientInterface.getBatchWait();
+    }
 
     public int getJobPollTime() {
         return clientInterface.getJobPollTime();

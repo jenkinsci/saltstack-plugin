@@ -12,6 +12,10 @@
     <f:textbox default="50%" />
   </f:entry>
   
+    <f:entry title="Batch Wait" field="batchWait">
+    <f:textbox default="" />
+  </f:entry>
+  
   <f:entry title="Target" field="target">
     <f:textbox />
   </f:entry>
