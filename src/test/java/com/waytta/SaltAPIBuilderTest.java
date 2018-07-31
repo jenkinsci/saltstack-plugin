@@ -94,7 +94,7 @@ public class SaltAPIBuilderTest {
     }
 
     @Test
-    public void testLocalBatchClientPrepareSaltFunction2018() throws Exception {
+    public void testLocalBatchClientPrepareSaltFunction2017() throws Exception {
         AbstractBuild jenkinsBuild = mock(AbstractBuild.class);
         BuildListener buildListener = mock(BuildListener.class);
         PrintStream printer = mock(PrintStream.class);
@@ -146,7 +146,7 @@ public class SaltAPIBuilderTest {
     }
 
     @Test
-    public void testLocalClientPrepareSaltFunction2018() throws Exception {
+    public void testLocalClientPrepareSaltFunction2017() throws Exception {
         AbstractBuild jenkinsBuild = mock(AbstractBuild.class);
         BuildListener buildListener = mock(BuildListener.class);
         PrintStream printer = mock(PrintStream.class);
@@ -202,7 +202,7 @@ public class SaltAPIBuilderTest {
     }
 
     @Test
-    public void testLocalAsyncClientPrepareSaltFunction2018() throws Exception {
+    public void testLocalAsyncClientPrepareSaltFunction2017() throws Exception {
         AbstractBuild jenkinsBuild = mock(AbstractBuild.class);
         BuildListener buildListener = mock(BuildListener.class);
         PrintStream printer = mock(PrintStream.class);
@@ -259,7 +259,7 @@ public class SaltAPIBuilderTest {
     }
 
     @Test
-    public void testLocalSubsetClientPrepareSaltFunction2018() throws Exception {
+    public void testLocalSubsetClientPrepareSaltFunction2017() throws Exception {
         AbstractBuild jenkinsBuild = mock(AbstractBuild.class);
         BuildListener buildListener = mock(BuildListener.class);
         PrintStream printer = mock(PrintStream.class);
