@@ -193,6 +193,14 @@ public class Utils {
                     }
                 }
 
+                // test if success is false
+                if (jsonObject.has("success")) {
+                    result = jsonObject.getBoolean("success");
+                    if (!result) {
+                        break;
+                    }
+                }
+
                 result = validateInnerJsonObject(jsonObject);
                 if (!result) {
                     break;

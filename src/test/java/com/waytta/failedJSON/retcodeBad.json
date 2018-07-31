@@ -1,0 +1,7 @@
+[{
+  "minion1":{
+    "return":"highretcode",
+    "retcode":127,
+    "success":true
+  }
+}]

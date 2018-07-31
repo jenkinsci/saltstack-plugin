@@ -1,0 +1,9 @@
+[
+  {
+    "minionname": {
+      "return": "text",
+      "success": false,
+      "out": "nested"
+    }
+  }
+]

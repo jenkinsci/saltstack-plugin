@@ -17,6 +17,7 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import hudson.Extension;
 import hudson.FilePath;
@@ -163,6 +164,12 @@ public class SaltAPIStep extends Step implements Serializable {
     @Extension
     public static final class DescriptorImpl extends StepDescriptor {
 
+        String apiVersion = "2017.7";
+
+        public DescriptorImpl() {
+            load();
+        }
+
         @Override
         public String getFunctionName() {
             return "salt";
@@ -173,26 +180,34 @@ public class SaltAPIStep extends Step implements Serializable {
             return "Send a message to Salt API";
         }
 
+        public String getApiVersion() {
+            return apiVersion;
+        }
+
         public FormValidation doCheckServername(@QueryParameter String value) {
             return SaltAPIBuilder.DescriptorImpl.doCheckServername(value);
         }
 
+        @RequirePOST
         public ListBoxModel doFillCredentialsIdItems(
                 @AncestorInPath Job context,
                 @QueryParameter final String credentialsId,
-                @QueryParameter final String servername) {
-            return SaltAPIBuilder.DescriptorImpl.doFillCredentialsIdItems(context, credentialsId, servername);
+                @QueryParameter final String servername,
+                @AncestorInPath Item project) {
+            return SaltAPIBuilder.DescriptorImpl.doFillCredentialsIdItems(context, credentialsId, servername, project);
         }
 
         public FormValidation doCheckCredentialsId(@AncestorInPath Item project, @QueryParameter String value) {
             return SaltAPIBuilder.DescriptorImpl.doCheckCredentialsId(project, value);
         }
 
+        @RequirePOST
         public FormValidation doTestConnection(
                 @QueryParameter String servername,
                 @QueryParameter String credentialsId,
                 @QueryParameter String authtype,
                 @AncestorInPath Item project) {
+            project.checkPermission(Item.CONFIGURE);
             return SaltAPIBuilder.DescriptorImpl.doTestConnection(servername, credentialsId, authtype, project);
         }
 
@@ -317,7 +332,7 @@ public class SaltAPIStep extends Step implements Serializable {
             LOGGER.log(Level.FINE, "Discovered netapi: " + netapi);
 
             // If we got this far, auth must have been good and we've got a token
-            saltFunc = saltBuilder.prepareSaltFunction(run, listener, saltBuilder.getClientInterface().getDescriptor().getDisplayName(), saltBuilder.getTarget(), saltBuilder.getFunction(), saltBuilder.getArguments());
+            saltFunc = saltBuilder.prepareSaltFunction(run, listener, saltBuilder.getClientInterface().getDescriptor().getDisplayName(), saltBuilder.getTarget(), saltBuilder.getFunction(), saltBuilder.getArguments(), saltBuilder.getDescriptor().getApiVersion(), saltBuilder.getTargettype());
             LOGGER.log(Level.FINE, "Sending JSON: " + saltFunc.toString());
         }
 

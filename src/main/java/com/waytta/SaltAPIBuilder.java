@@ -49,6 +49,7 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.Stapler;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import jenkins.model.Jenkins;
 import java.util.Collections;
@@ -241,6 +242,7 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializ
     public void perform(Run<?, ?> build, FilePath workspace, Launcher launcher, TaskListener listener)
             throws InterruptedException, IOException {
         String myOutputFormat = getDescriptor().getOutputFormat();
+        String myApiVersion = getDescriptor().getApiVersion();
         String myClientInterface = clientInterface.getDescriptor().getDisplayName();
         String myservername = Utils.paramorize(build, listener, servername);
         String mytarget = Utils.paramorize(build, listener, getTarget());
@@ -267,7 +269,7 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializ
         LOGGER.log(Level.FINE, "Discovered netapi: " + netapi);
 
         // If we got this far, auth must have been good and we've got a token
-        JSONObject saltFunc = prepareSaltFunction(build, listener, myClientInterface, mytarget, myfunction, myarguments);
+        JSONObject saltFunc = prepareSaltFunction(build, listener, myClientInterface, mytarget, myfunction, myarguments, myApiVersion, getTargettype());
         LOGGER.log(Level.FINE, "Sending JSON: " + saltFunc.toString());
 
         JSONArray returnArray;
@@ -368,14 +370,27 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializ
     }
 
     public JSONObject prepareSaltFunction(Run build, TaskListener listener, String myClientInterface, String mytarget,
-            String myfunction, String myarguments) throws IOException, InterruptedException {
+            String myfunction, String myarguments, String myApiVersion, String targetType) throws IOException, InterruptedException {
         JSONObject saltFunc = new JSONObject();
         saltFunc.put("client", myClientInterface);
+        String tgt_key = "tgt_type";
+
+        switch (myApiVersion) {
+        case "2017.7":
+            if (myfunction.startsWith("cmd.") || myfunction.startsWith("cmd_sync.")) {
+                // cmd.run and cmd_sync functions have expanded output as of 2017.7
+                saltFunc.put("full_return", true);
+            }
+            break;
+        case "older":
+            tgt_key = "expr_form";
+            break;
+        }
 
         switch (myClientInterface) {
         case "local":
             saltFunc.put("tgt", mytarget);
-            saltFunc.put("expr_form", getTargettype());
+            saltFunc.put(tgt_key, targetType);
             if (getBlockbuild()) {
                 // when sending to the /minion endpoint, use local_async instead of just local
                 saltFunc.element("client", "local_async");
@@ -383,7 +398,7 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializ
             break;
         case "local_batch":
             saltFunc.put("tgt", mytarget);
-            saltFunc.put("tgt_type", getTargettype());
+            saltFunc.put(tgt_key, targetType);
             String mybatch = Utils.paramorize(build, listener, getBatchSize());
             saltFunc.put("batch", mybatch);
             String mybatchWait = getBatchWait();
@@ -408,7 +423,7 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializ
             break;
         case "local_subset":
             saltFunc.put("tgt", mytarget);
-            saltFunc.put("expr_form", getTargettype());
+            saltFunc.put(tgt_key, targetType);
             String mySubset = Utils.paramorize(build, listener, getSubset());
             saltFunc.put("sub", Integer.parseInt(mySubset));
             listener.getLogger().println("Running in subset mode. Subset size: " + mySubset);
@@ -444,6 +459,7 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializ
         int pollTime = 10;
         int minionTimeout = 30;
         String outputFormat = "json";
+        String apiVersion = "2017.7";
 
         public DescriptorImpl() {
             load();
@@ -461,6 +477,7 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializ
                 minionTimeout = 30;
             }
             outputFormat = formData.getString("outputFormat");
+            apiVersion = formData.getString("apiVersion");
             save();
             return super.configure(req, formData);
         }
@@ -477,11 +494,17 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializ
             return outputFormat;
         }
 
+        public String getApiVersion() {
+            return apiVersion;
+        }
+
+        @RequirePOST
         public static FormValidation doTestConnection(
                 @QueryParameter String servername,
                 @QueryParameter String credentialsId,
                 @QueryParameter String authtype,
                 @AncestorInPath Item project) {
+            project.checkPermission(Item.CONFIGURE);
             StandardUsernamePasswordCredentials usedCredential = null;
             for (StandardUsernamePasswordCredentials c : CredentialsProvider.lookupCredentials(
                     StandardUsernamePasswordCredentials.class,
@@ -520,11 +543,14 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializ
 
             return FormValidation.warning("Cannot expand parametrized server name.");
         }
-
+        
+        @RequirePOST
         public static ListBoxModel doFillCredentialsIdItems(
                 @AncestorInPath Job context,
                 @QueryParameter String credentialsId,
-                @QueryParameter final String servername) {
+                @QueryParameter final String servername,
+                @AncestorInPath Item project) {
+            project.checkPermission(Item.CONFIGURE);
             Item item = Stapler.getCurrentRequest().findAncestorObject(Item.class);
             return new StandardUsernameListBoxModel()
                     .includeAs(
@@ -557,9 +583,11 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializ
             return FormValidation.warning("Cannot expand parametrized server name.");
         }
 
+        @RequirePOST
         public static FormValidation doCheckCredentialsId(
                 @AncestorInPath Item project,
                 @QueryParameter String value) {
+            project.checkPermission(Item.CONFIGURE);
             if (project == null || !project.hasPermission(Item.CONFIGURE)) {
                 return FormValidation.ok();
             }

@@ -40,7 +40,8 @@ import static org.powermock.api.mockito.PowerMockito.when;
 import com.waytta.clientinterface.*;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({JSONObject.class, Jenkins.class, SaltAPIBuilder.DescriptorImpl.class, CredentialsProvider.class, Utils.class})
+@PrepareForTest({ JSONObject.class, Jenkins.class, SaltAPIBuilder.DescriptorImpl.class, CredentialsProvider.class,
+        Utils.class })
 public class SaltAPIBuilderTest {
 
     private String target = "*";
@@ -49,7 +50,6 @@ public class SaltAPIBuilderTest {
     private String targettype = "glob";
     private String mods = "";
     private String pillarvalue = "{\"key\":\"value\"}";
-
 
     @Test
     public void testHookPrepareSaltFunction() throws Exception {
@@ -62,7 +62,8 @@ public class SaltAPIBuilderTest {
 
         JSONObject testObject = JSONObject.fromObject("{\"key3\":\"value\"}");
 
-        JSONObject result = saltAPIBuilder.prepareSaltFunction(jenkinsBuild, buildListener, myClientInterface, target, function, arguments);
+        JSONObject result = saltAPIBuilder.prepareSaltFunction(jenkinsBuild, buildListener, myClientInterface, target,
+                function, arguments, "older", targettype);
         assertEquals(testObject, result);
     }
 
@@ -87,7 +88,35 @@ public class SaltAPIBuilderTest {
                 + "\"kwarg\":{}"
                 + "}");
 
-        JSONObject result = saltAPIBuilder.prepareSaltFunction(jenkinsBuild, buildListener, myClientInterface, target, function, arguments);
+        JSONObject result = saltAPIBuilder.prepareSaltFunction(jenkinsBuild, buildListener, myClientInterface, target,
+                function, arguments, "older", targettype);
+        assertEquals(testObject, result);
+    }
+
+    @Test
+    public void testLocalBatchClientPrepareSaltFunction2017() throws Exception {
+        AbstractBuild jenkinsBuild = mock(AbstractBuild.class);
+        BuildListener buildListener = mock(BuildListener.class);
+        PrintStream printer = mock(PrintStream.class);
+        when(buildListener.getLogger()).thenReturn(printer);
+
+        LocalBatchClient client = new LocalBatchClient(function, arguments, "50%", target, targettype);
+        String myClientInterface = "local_batch";
+        SaltAPIBuilder saltAPIBuilder = new SaltAPIBuilder("name", "pam", client, "creds");
+
+        JSONObject testObject = JSONObject.fromObject("{"
+                + "\"client\":\"local_batch\","
+                + "\"batch\":\"50%\","
+                + "\"tgt\":\"*\","
+                + "\"tgt_type\":\"glob\","
+                + "\"fun\":\"cmd.run\","
+                + "\"full_return\":true,"
+                + "\"arg\":\"ls -la\","
+                + "\"kwarg\":{}"
+                + "}");
+
+        JSONObject result = saltAPIBuilder.prepareSaltFunction(jenkinsBuild, buildListener, myClientInterface, target,
+                function, arguments, "2017.7", targettype);
         assertEquals(testObject, result);
     }
 
@@ -111,7 +140,34 @@ public class SaltAPIBuilderTest {
                 + "\"kwarg\":{}"
                 + "}");
 
-        JSONObject result = saltAPIBuilder.prepareSaltFunction(jenkinsBuild, buildListener, myClientInterface, target, function, arguments);
+        JSONObject result = saltAPIBuilder.prepareSaltFunction(jenkinsBuild, buildListener, myClientInterface, target,
+                function, arguments, "older", targettype);
+        assertEquals(testObject, result);
+    }
+
+    @Test
+    public void testLocalClientPrepareSaltFunction2017() throws Exception {
+        AbstractBuild jenkinsBuild = mock(AbstractBuild.class);
+        BuildListener buildListener = mock(BuildListener.class);
+        PrintStream printer = mock(PrintStream.class);
+        when(buildListener.getLogger()).thenReturn(printer);
+
+        LocalClient client = new LocalClient(function, arguments, target, targettype);
+        String myClientInterface = "local";
+        SaltAPIBuilder saltAPIBuilder = new SaltAPIBuilder("name", "pam", client, "creds");
+
+        JSONObject testObject = JSONObject.fromObject("{"
+                + "\"client\":\"local\","
+                + "\"tgt\":\"*\","
+                + "\"tgt_type\":\"glob\","
+                + "\"fun\":\"cmd.run\","
+                + "\"full_return\":true,"
+                + "\"arg\":\"ls -la\","
+                + "\"kwarg\":{}"
+                + "}");
+
+        JSONObject result = saltAPIBuilder.prepareSaltFunction(jenkinsBuild, buildListener, myClientInterface, target,
+                function, arguments, "2017.7", targettype);
         assertEquals(testObject, result);
     }
 
@@ -140,7 +196,39 @@ public class SaltAPIBuilderTest {
                 + "\"kwarg\":{}"
                 + "}");
 
-        JSONObject result = saltAPIBuilder.prepareSaltFunction(jenkinsBuild, buildListener, myClientInterface, target, function, arguments);
+        JSONObject result = saltAPIBuilder.prepareSaltFunction(jenkinsBuild, buildListener, myClientInterface, target,
+                function, arguments, "older", targettype);
+        assertEquals(testObject, result);
+    }
+
+    @Test
+    public void testLocalAsyncClientPrepareSaltFunction2017() throws Exception {
+        AbstractBuild jenkinsBuild = mock(AbstractBuild.class);
+        BuildListener buildListener = mock(BuildListener.class);
+        PrintStream printer = mock(PrintStream.class);
+        when(buildListener.getLogger()).thenReturn(printer);
+
+        LocalClient client = mock(LocalClient.class);
+        when(client.getBlockbuild()).thenReturn(TRUE);
+        when(client.getTargettype()).thenReturn("glob");
+        when(client.getFunction()).thenReturn("test.ping");
+        when(client.getTarget()).thenReturn("minion1");
+
+        String myClientInterface = "local";
+        SaltAPIBuilder saltAPIBuilder = new SaltAPIBuilder("name", "pam", client, "creds");
+
+        JSONObject testObject = JSONObject.fromObject("{"
+                + "\"client\":\"local_async\","
+                + "\"tgt\":\"*\","
+                + "\"tgt_type\":\"glob\","
+                + "\"fun\":\"cmd.run\","
+                + "\"full_return\":true,"
+                + "\"arg\":\"ls -la\","
+                + "\"kwarg\":{}"
+                + "}");
+
+        JSONObject result = saltAPIBuilder.prepareSaltFunction(jenkinsBuild, buildListener, myClientInterface, target,
+                function, arguments, "2017.7", targettype);
         assertEquals(testObject, result);
     }
 
@@ -165,10 +253,36 @@ public class SaltAPIBuilderTest {
                 + "\"kwarg\":{}"
                 + "}");
 
-        JSONObject result = saltAPIBuilder.prepareSaltFunction(jenkinsBuild, buildListener, myClientInterface, target, function, arguments);
+        JSONObject result = saltAPIBuilder.prepareSaltFunction(jenkinsBuild, buildListener, myClientInterface, target,
+                function, arguments, "older", targettype);
         assertEquals(testObject, result);
     }
 
+    @Test
+    public void testLocalSubsetClientPrepareSaltFunction2017() throws Exception {
+        AbstractBuild jenkinsBuild = mock(AbstractBuild.class);
+        BuildListener buildListener = mock(BuildListener.class);
+        PrintStream printer = mock(PrintStream.class);
+        when(buildListener.getLogger()).thenReturn(printer);
+
+        LocalSubsetClient client = new LocalSubsetClient(function, arguments, "5", target, targettype);
+        String myClientInterface = "local_subset";
+        SaltAPIBuilder saltAPIBuilder = new SaltAPIBuilder("name", "pam", client, "creds");
+
+        JSONObject testObject = JSONObject.fromObject("{"
+                + "\"client\":\"local_subset\","
+                + "\"sub\":\"5\","
+                + "\"tgt\":\"*\","
+                + "\"tgt_type\":\"glob\","
+                + "\"fun\":\"cmd.run\","
+                + "\"full_return\":true,"
+                + "\"arg\":\"ls -la\","
+                + "\"kwarg\":{}" + "}");
+
+        JSONObject result = saltAPIBuilder.prepareSaltFunction(jenkinsBuild, buildListener, myClientInterface, target,
+                function, arguments, "2017.7", targettype);
+        assertEquals(testObject, result);
+    }
 
     @Test
     public void testRunnerClientPrepareSaltFunction() throws Exception {
@@ -189,7 +303,8 @@ public class SaltAPIBuilderTest {
                 + "\"kwarg\":{}"
                 + "}");
 
-        JSONObject result = saltAPIBuilder.prepareSaltFunction(jenkinsBuild, buildListener, myClientInterface, target, function, arguments);
+        JSONObject result = saltAPIBuilder.prepareSaltFunction(jenkinsBuild, buildListener, myClientInterface, target,
+                function, arguments, "older", targettype);
         assertEquals(testObject, result);
     }
 }
