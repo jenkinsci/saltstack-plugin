@@ -17,16 +17,18 @@ public class LocalBatchClient extends BasicClient {
     private String function;
     private String arguments;
     private String batchSize = "100%";
+    private String batchWait = "";
     private String target;
     private String targettype;
     private transient String targetType;
 
 
     @DataBoundConstructor
-    public LocalBatchClient(String function, String arguments, String batchSize, String target, String targettype) {
+    public LocalBatchClient(String function, String arguments, String batchSize, String batchWait, String target, String targettype) {
         this.function = function;
         this.arguments = arguments;
         this.batchSize = batchSize;
+        this.batchWait = batchWait;
         this.target = target;
         this.targettype = targettype;
     }
@@ -44,6 +46,11 @@ public class LocalBatchClient extends BasicClient {
     @Override
     public String getBatchSize() {
         return batchSize;
+    }
+    
+    @Override
+    public String getBatchWait() {
+        return batchWait;
     }
 
     @Override

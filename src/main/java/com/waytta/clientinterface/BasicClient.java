@@ -35,6 +35,10 @@ abstract public class BasicClient implements ExtensionPoint, Serializable, Descr
     public String getBatchSize() {
         return "";
     }
+    
+    public String getBatchWait() {
+        return "";
+    }
 
     public int getJobPollTime() {
         return 10;
