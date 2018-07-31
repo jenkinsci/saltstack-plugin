@@ -6,18 +6,21 @@
   </f:entry>
 
   <f:entry title="Credentials" field="credentialsId">
-    <c:select />
+    <c:select checkMethod="post"/>
   </f:entry>
 
   <f:entry title="Auth Type" field="authtype">
     <select name="authtype">
+      <f:option value="auto" selected="${instance.authtype == 'auto'}">auto</f:option>
+      <f:option value="file" selected="${instance.authtype == 'file'}">file</f:option>
       <f:option value="pam" selected="${instance.authtype == 'pam'}">pam</f:option>
       <f:option value="ldap" selected="${instance.authtype == 'ldap'}">ldap</f:option>
     </select>
   </f:entry>
   <f:validateButton
    title="${%Test Connection}" progress="${%Testing...}"
-   method="testConnection" with="servername,credentialsId,authtype" />
+   method="testConnection" with="servername,credentialsId,authtype" 
+   checkMethod="post" />
 
   <f:dropdownDescriptorSelector title="Client Interface" field="clientInterface"
     descriptors="${descriptor.clientDescriptors}" />

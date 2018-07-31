@@ -14,7 +14,7 @@
     </properties>
 
     <artifactId>saltstack</artifactId>
-    <version>3.1.7-SNAPSHOT</version>
+    <version>3.1.8-SNAPSHOT</version>
     <packaging>hpi</packaging>
     <name>Jenkins SaltStack plugin</name>
     <description>Allows Jenkins to send SaltStack messages</description>

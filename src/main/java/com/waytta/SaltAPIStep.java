@@ -17,6 +17,7 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import hudson.Extension;
 import hudson.FilePath;
@@ -183,22 +184,26 @@ public class SaltAPIStep extends Step implements Serializable {
             return SaltAPIBuilder.DescriptorImpl.doCheckServername(value);
         }
 
+        @RequirePOST
         public ListBoxModel doFillCredentialsIdItems(
                 @AncestorInPath Job context,
                 @QueryParameter final String credentialsId,
-                @QueryParameter final String servername) {
-            return SaltAPIBuilder.DescriptorImpl.doFillCredentialsIdItems(context, credentialsId, servername);
+                @QueryParameter final String servername,
+                @AncestorInPath Item project) {
+            return SaltAPIBuilder.DescriptorImpl.doFillCredentialsIdItems(context, credentialsId, servername, project);
         }
 
         public FormValidation doCheckCredentialsId(@AncestorInPath Item project, @QueryParameter String value) {
             return SaltAPIBuilder.DescriptorImpl.doCheckCredentialsId(project, value);
         }
 
+        @RequirePOST
         public FormValidation doTestConnection(
                 @QueryParameter String servername,
                 @QueryParameter String credentialsId,
                 @QueryParameter String authtype,
                 @AncestorInPath Item project) {
+            project.checkPermission(Item.CONFIGURE);
             return SaltAPIBuilder.DescriptorImpl.doTestConnection(servername, credentialsId, authtype, project);
         }
 
