@@ -74,7 +74,7 @@ public class SaltAPIBuilderTest {
         PrintStream printer = mock(PrintStream.class);
         when(buildListener.getLogger()).thenReturn(printer);
 
-        LocalBatchClient client = new LocalBatchClient(function, arguments, "50%", target, targettype);
+        LocalBatchClient client = new LocalBatchClient(function, arguments, "50%", "", target, targettype);
         String myClientInterface = "local_batch";
         SaltAPIBuilder saltAPIBuilder = new SaltAPIBuilder("name", "pam", client, "creds");
 
@@ -84,8 +84,7 @@ public class SaltAPIBuilderTest {
                 + "\"tgt\":\"*\","
                 + "\"expr_form\":\"glob\","
                 + "\"fun\":\"cmd.run\","
-                + "\"arg\":\"ls -la\","
-                + "\"kwarg\":{}"
+                + "\"arg\":\"ls -la\""
                 + "}");
 
         JSONObject result = saltAPIBuilder.prepareSaltFunction(jenkinsBuild, buildListener, myClientInterface, target,
@@ -100,7 +99,7 @@ public class SaltAPIBuilderTest {
         PrintStream printer = mock(PrintStream.class);
         when(buildListener.getLogger()).thenReturn(printer);
 
-        LocalBatchClient client = new LocalBatchClient(function, arguments, "50%", target, targettype);
+        LocalBatchClient client = new LocalBatchClient(function, arguments, "50%", "", target, targettype);
         String myClientInterface = "local_batch";
         SaltAPIBuilder saltAPIBuilder = new SaltAPIBuilder("name", "pam", client, "creds");
 
@@ -111,8 +110,7 @@ public class SaltAPIBuilderTest {
                 + "\"tgt_type\":\"glob\","
                 + "\"fun\":\"cmd.run\","
                 + "\"full_return\":true,"
-                + "\"arg\":\"ls -la\","
-                + "\"kwarg\":{}"
+                + "\"arg\":\"ls -la\""
                 + "}");
 
         JSONObject result = saltAPIBuilder.prepareSaltFunction(jenkinsBuild, buildListener, myClientInterface, target,
@@ -136,8 +134,7 @@ public class SaltAPIBuilderTest {
                 + "\"tgt\":\"*\","
                 + "\"expr_form\":\"glob\","
                 + "\"fun\":\"cmd.run\","
-                + "\"arg\":\"ls -la\","
-                + "\"kwarg\":{}"
+                + "\"arg\":\"ls -la\""
                 + "}");
 
         JSONObject result = saltAPIBuilder.prepareSaltFunction(jenkinsBuild, buildListener, myClientInterface, target,
@@ -162,8 +159,7 @@ public class SaltAPIBuilderTest {
                 + "\"tgt_type\":\"glob\","
                 + "\"fun\":\"cmd.run\","
                 + "\"full_return\":true,"
-                + "\"arg\":\"ls -la\","
-                + "\"kwarg\":{}"
+                + "\"arg\":\"ls -la\""
                 + "}");
 
         JSONObject result = saltAPIBuilder.prepareSaltFunction(jenkinsBuild, buildListener, myClientInterface, target,
@@ -192,8 +188,7 @@ public class SaltAPIBuilderTest {
                 + "\"tgt\":\"*\","
                 + "\"expr_form\":\"glob\","
                 + "\"fun\":\"cmd.run\","
-                + "\"arg\":\"ls -la\","
-                + "\"kwarg\":{}"
+                + "\"arg\":\"ls -la\""
                 + "}");
 
         JSONObject result = saltAPIBuilder.prepareSaltFunction(jenkinsBuild, buildListener, myClientInterface, target,
@@ -223,8 +218,7 @@ public class SaltAPIBuilderTest {
                 + "\"tgt_type\":\"glob\","
                 + "\"fun\":\"cmd.run\","
                 + "\"full_return\":true,"
-                + "\"arg\":\"ls -la\","
-                + "\"kwarg\":{}"
+                + "\"arg\":\"ls -la\""
                 + "}");
 
         JSONObject result = saltAPIBuilder.prepareSaltFunction(jenkinsBuild, buildListener, myClientInterface, target,
@@ -249,8 +243,7 @@ public class SaltAPIBuilderTest {
                 + "\"tgt\":\"*\","
                 + "\"expr_form\":\"glob\","
                 + "\"fun\":\"cmd.run\","
-                + "\"arg\":\"ls -la\","
-                + "\"kwarg\":{}"
+                + "\"arg\":\"ls -la\""
                 + "}");
 
         JSONObject result = saltAPIBuilder.prepareSaltFunction(jenkinsBuild, buildListener, myClientInterface, target,
@@ -276,8 +269,8 @@ public class SaltAPIBuilderTest {
                 + "\"tgt_type\":\"glob\","
                 + "\"fun\":\"cmd.run\","
                 + "\"full_return\":true,"
-                + "\"arg\":\"ls -la\","
-                + "\"kwarg\":{}" + "}");
+                + "\"arg\":\"ls -la\""
+                + "}");
 
         JSONObject result = saltAPIBuilder.prepareSaltFunction(jenkinsBuild, buildListener, myClientInterface, target,
                 function, arguments, "2017.7", targettype);
@@ -299,8 +292,7 @@ public class SaltAPIBuilderTest {
                 + "\"client\":\"runner\","
                 + "\"pillar\":{\"key\":\"value\"},"
                 + "\"fun\":\"cmd.run\","
-                + "\"arg\":\"ls -la\","
-                + "\"kwarg\":{}"
+                + "\"arg\":\"ls -la\""
                 + "}");
 
         JSONObject result = saltAPIBuilder.prepareSaltFunction(jenkinsBuild, buildListener, myClientInterface, target,

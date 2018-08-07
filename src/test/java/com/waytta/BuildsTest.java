@@ -73,8 +73,7 @@ public class BuildsTest {
                 + "\"tgt\":\"testTarget\","
                 + "\"expr_form\":\"glob\","
                 + "\"fun\":\"cmd.run\","
-                + "\"arg\":\"export test=yep; echo $test\","
-                + "\"kwarg\":{},"
+                + "\"arg\":\"export test=yep; echo $test\""
                 + "}");
 
         assertEquals(expectedResult, saltFunc);
@@ -96,8 +95,7 @@ public class BuildsTest {
                 + "\"tgt\":\"testTarget\","
                 + "\"expr_form\":\"glob\","
                 + "\"fun\":\"test.rand_sleep\","
-                + "\"arg\": 13,"
-                + "\"kwarg\":{},"
+                + "\"arg\": 13"
                 + "}");
 
         assertEquals(expectedResult, saltFunc);
