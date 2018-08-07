@@ -97,7 +97,9 @@ public class Builds {
                 }
             }
             // Now that loops have completed, add kwarg object
-            saltFunc.element("kwarg", fullKwJSON);
+            if (!fullKwJSON.isEmpty()) {
+                saltFunc.element("kwarg", fullKwJSON);
+            }
         }
     }
 
