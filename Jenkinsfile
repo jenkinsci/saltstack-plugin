@@ -1,1 +1,1 @@
-buildPlugin()
+buildPlugin(tests: [skip: false])
