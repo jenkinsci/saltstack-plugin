@@ -12,7 +12,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import jenkins.security.MasterToSlaveCallable;
-
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 

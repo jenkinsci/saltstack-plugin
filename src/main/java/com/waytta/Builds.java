@@ -7,8 +7,8 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 
-import hudson.model.TaskListener;
 import hudson.Launcher;
+import hudson.model.TaskListener;
 import net.sf.json.JSON;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONException;
@@ -171,7 +171,6 @@ public class Builds {
         int numMinions = 0;
         int numMinionsDone = 0;
         JSONArray minionsArray = new JSONArray();
-        JSONObject resultObject = new JSONObject();
         JSONArray httpArray = new JSONArray();
         JSONArray returnArray = new JSONArray();
         JSONObject httpResponse = new JSONObject();
@@ -180,7 +179,6 @@ public class Builds {
         for (Object o : httpArray) {
             JSONObject line = (JSONObject) o;
             minionsArray = line.getJSONArray("Minions");
-            resultObject = line.getJSONObject("Result");
         }
 
         // Check Minions array for number of targets minions

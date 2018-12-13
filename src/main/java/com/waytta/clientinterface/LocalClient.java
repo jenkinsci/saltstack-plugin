@@ -1,19 +1,18 @@
 package com.waytta.clientinterface;
 
-import hudson.Extension;
-import org.kohsuke.stapler.QueryParameter;
-import hudson.util.FormValidation;
-
 import java.io.IOException;
 
-import org.jenkinsci.Symbol;
-import org.kohsuke.stapler.DataBoundSetter;
-import org.kohsuke.stapler.DataBoundConstructor;
-
-import com.waytta.Utils;
 import com.waytta.SaltAPIBuilder;
-import jenkins.model.Jenkins;
+import com.waytta.Utils;
 
+import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.QueryParameter;
+
+import hudson.Extension;
+import hudson.util.FormValidation;
+import jenkins.model.Jenkins;
 
 public class LocalClient extends BasicClient {
     private static final long serialVersionUID = 1L;

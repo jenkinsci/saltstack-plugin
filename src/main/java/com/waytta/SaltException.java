@@ -1,6 +1,7 @@
 package com.waytta;
 
 public class SaltException extends Exception {
+    private static final long serialVersionUID = 1L;
 
     public SaltException(String message) {
         super(message, null, true, false);

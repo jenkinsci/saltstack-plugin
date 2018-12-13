@@ -3,64 +3,50 @@ package com.waytta;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
+import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.waytta.clientinterface.BasicClient;
 import com.waytta.clientinterface.LocalBatchClient;
 import com.waytta.clientinterface.LocalClient;
 import com.waytta.clientinterface.RunnerClient;
+
+import org.kohsuke.stapler.AncestorInPath;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.Stapler;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.yaml.snakeyaml.Yaml;
 
-import com.cloudbees.plugins.credentials.CredentialsProvider;
-import com.cloudbees.plugins.credentials.CredentialsMatchers;
-import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
-import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
-import com.cloudbees.plugins.credentials.domains.DomainRequirement;
-
-import hudson.model.Item;
-import hudson.model.Queue;
-import hudson.model.Result;
-import hudson.model.queue.Tasks;
-import hudson.model.Job;
-import hudson.AbortException;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractProject;
+import hudson.model.Item;
+import hudson.model.Job;
+import hudson.model.Queue;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.model.queue.Tasks;
+import hudson.security.ACL;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
-import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
-import jenkins.security.MasterToSlaveCallable;
-
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
-import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.AncestorInPath;
-import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.interceptor.RequirePOST;
-
 import jenkins.model.Jenkins;
-import java.util.Collections;
-
 import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSON;
 import net.sf.json.JSONArray;
-import net.sf.json.JSONException;
-import net.sf.json.JSONSerializer;
 import net.sf.json.JSONObject;
-import net.sf.json.util.JSONUtils;
+import net.sf.json.JSONSerializer;
 
 public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializable {
     private static final long serialVersionUID = 1L;
@@ -77,7 +63,8 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializ
                     ((LocalClient) clientInterface).setJobPollTime(clientInterfaces.getInt("jobPollTime"));
                     ((LocalClient) clientInterface).setBlockbuild(clientInterfaces.getBoolean("blockbuild"));
                 } else if (clientInterfaces.getString("clientInterface").equals("local_batch")) {
-                    clientInterface = new LocalBatchClient(function, arguments + " " + kwarguments, batchSize, "", target, targettype);
+                    clientInterface = new LocalBatchClient(function, arguments + " " + kwarguments, batchSize, "",
+                            target, targettype);
                 } else if (clientInterfaces.getString("clientInterface").equals("runner")) {
                     clientInterface = new RunnerClient(function, arguments + " " + kwarguments, mods, pillarvalue);
                 }
@@ -86,7 +73,6 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializ
         }
         return this;
     }
-
 
     private static final Logger LOGGER = Logger.getLogger("com.waytta.saltstack");
 
