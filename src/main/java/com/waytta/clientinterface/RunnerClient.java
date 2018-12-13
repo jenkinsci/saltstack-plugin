@@ -1,20 +1,19 @@
 package com.waytta.clientinterface;
 
-import hudson.Extension;
-import org.kohsuke.stapler.DataBoundConstructor;
-
-import org.kohsuke.stapler.QueryParameter;
-
 import com.waytta.Utils;
 
-import hudson.util.FormValidation;
 import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
+import hudson.Extension;
+import hudson.util.FormValidation;
 
 public class RunnerClient extends BasicClient {
-	private String function;
-	private String arguments;
-	private String mods = "";
+    private static final long serialVersionUID = 1L;
+    private String function;
+    private String arguments;
+    private String mods = "";
 	private String pillarvalue = "";
 
     @DataBoundConstructor
