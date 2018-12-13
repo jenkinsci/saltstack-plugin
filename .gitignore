@@ -5,4 +5,5 @@
 .classpath
 /bin/
 **/.DS_Store
-
+.factorypath
+.vscode/*

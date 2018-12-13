@@ -11,15 +11,15 @@ import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.util.FormValidation;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
-import hudson.util.FormValidation;
-
 public class Utils {
-    public static ServerToken getToken(Launcher launcher, String servername, JSONObject auth) throws InterruptedException, IOException {
+    public static ServerToken getToken(Launcher launcher, String servername, JSONObject auth)
+            throws InterruptedException, IOException {
         String token = "";
         String server = "";
         JSONObject httpResponse = (JSONObject) JSONSerializer.toJSON(launcher.getChannel().call(new HttpCallable(servername + "/login", auth, null)));
@@ -195,7 +195,7 @@ public class Utils {
 
                 // test if success is false
                 if (jsonObject.has("success")) {
-                    result = jsonObject.getBoolean("success");
+                    result = jsonObject.optBoolean("success", true);
                     if (!result) {
                         break;
                     }

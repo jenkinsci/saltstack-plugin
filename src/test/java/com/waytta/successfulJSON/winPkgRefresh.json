@@ -1,0 +1,95 @@
+[
+    {
+        "win-2": {
+            "module_|-db_refresh_|-pkg.refresh_db_|-run": {
+                "__run_num__": 0,
+                "duration": 13766.626,
+                "__sls__": "test_release",
+                "result": true,
+                "comment": "Module function pkg.refresh_db executed",
+                "changes": {
+                    "ret": {
+                        "total": 6,
+                        "failed": 0,
+                        "success": 6
+                    }
+                },
+                "__id__": "db_refresh",
+                "name": "pkg.refresh_db",
+                "start_time": "14:48:25.743621"
+            },
+            "cmd_|-cmd_loopback_|-echo \"TEST-RELEASE_IS_ALREADY_INSTALLED\"_|-run": {
+                "__run_num__": 1,
+                "duration": 131.633,
+                "__sls__": "test_release",
+                "result": true,
+                "comment": "Command \"echo \"TEST-RELEASE_IS_ALREADY_INSTALLED\"\" run",
+                "changes": {
+                    "stderr": "",
+                    "retcode": 0,
+                    "stdout": "\"TEST-RELEASE_IS_ALREADY_INSTALLED\"",
+                    "pid": 4500
+                },
+                "__id__": "cmd_loopback",
+                "name": "echo \"TEST-RELEASE_IS_ALREADY_INSTALLED\"",
+                "start_time": "14:48:39.510247"
+            }
+        }
+    }
+],
+"info": [
+    {
+        "StartTime": "2018, Dec 11 06:47:38.111418",
+        "Result": {
+            "win-2": {
+                "return": {
+                    "module_|-db_refresh_|-pkg.refresh_db_|-run": {
+                        "__run_num__": 0,
+                        "duration": 13766.626,
+                        "__sls__": "test_release",
+                        "result": true,
+                        "comment": "Module function pkg.refresh_db executed",
+                        "changes": {
+                            "ret": {
+                                "total": 6,
+                                "failed": 0,
+                                "success": 6
+                            }
+                        },
+                        "__id__": "db_refresh",
+                        "name": "pkg.refresh_db",
+                        "start_time": "14:48:25.743621"
+                    },
+                    "cmd_|-cmd_loopback_|-echo \"TEST-RELEASE_IS_ALREADY_INSTALLED\"_|-run": {
+                        "__run_num__": 1,
+                        "duration": 131.633,
+                        "__sls__": "test_release",
+                        "result": true,
+                        "comment": "Command \"echo \"TEST-RELEASE_IS_ALREADY_INSTALLED\"\" run",
+                        "changes": {
+                            "stderr": "",
+                            "retcode": 0,
+                            "stdout": "\"TEST-RELEASE_IS_ALREADY_INSTALLED\"",
+                            "pid": 4500
+                        },
+                        "__id__": "cmd_loopback",
+                        "name": "echo \"TEST-RELEASE_IS_ALREADY_INSTALLED\"",
+                        "start_time": "14:48:39.510247"
+                    }
+                },
+                "out": "highstate",
+                "retcode": 0,
+                "success": true
+            }
+        },
+        "User": "root",
+        "Arguments": [],
+        "Function": "state.apply",
+        "Minions": [
+            "win-2"
+        ],
+        "Target": "unknown-target",
+        "Target-type": "list",
+        "jid": "20181211064738111418"
+    }
+]
