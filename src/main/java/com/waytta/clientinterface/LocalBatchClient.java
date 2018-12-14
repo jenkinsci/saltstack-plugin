@@ -1,16 +1,15 @@
 package com.waytta.clientinterface;
 
-import hudson.Extension;
-import org.kohsuke.stapler.DataBoundConstructor;
-import hudson.util.FormValidation;
-import org.kohsuke.stapler.QueryParameter;
-
 import java.io.IOException;
-
-import org.jenkinsci.Symbol;
 
 import com.waytta.Utils;
 
+import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
+
+import hudson.Extension;
+import hudson.util.FormValidation;
 
 public class LocalBatchClient extends BasicClient {
     private static final long serialVersionUID = 1L;

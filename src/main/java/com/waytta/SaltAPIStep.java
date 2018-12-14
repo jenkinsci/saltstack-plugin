@@ -1,18 +1,24 @@
 package com.waytta;
 
-import com.waytta.SaltException;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import javax.inject.Inject;
 
-import hudson.model.Run;
-import hudson.model.TaskListener;
-import org.jenkinsci.plugins.workflow.steps.*;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.google.common.collect.ImmutableSet;
+import com.waytta.clientinterface.BasicClient;
+
+import org.jenkinsci.plugins.workflow.steps.AbstractStepExecutionImpl;
+import org.jenkinsci.plugins.workflow.steps.Step;
+import org.jenkinsci.plugins.workflow.steps.StepContext;
+import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
+import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -24,18 +30,15 @@ import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.Item;
 import hudson.model.Job;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
-import com.cloudbees.plugins.credentials.CredentialsProvider;
-import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
-import com.waytta.clientinterface.BasicClient;
-
-import com.google.common.collect.ImmutableSet;
-
 public class SaltAPIStep extends Step implements Serializable {
+    private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger("com.waytta.saltstack");
 
     private String servername;
@@ -272,11 +275,9 @@ public class SaltAPIStep extends Step implements Serializable {
         @Override public void onResume() {
             TaskListener listener = null;
             Launcher launcher = null;
-            FilePath workspace = null;
             try {
                 listener = getContext().get(TaskListener.class);
                 launcher = getContext().get(Launcher.class);
-                workspace = getContext().get(FilePath.class);
             } catch (Exception e) {
                 Execution.this.getContext().onFailure(e);
             }
@@ -338,7 +339,6 @@ public class SaltAPIStep extends Step implements Serializable {
 
         private void saltPerform(String token, JSONObject saltFunc, String netapi) throws Exception, SaltException {
             Run<?, ?>run = getContext().get(Run.class);
-            FilePath workspace = getContext().get(FilePath.class);
             TaskListener listener = getContext().get(TaskListener.class);
             Launcher launcher = getContext().get(Launcher.class);
 
