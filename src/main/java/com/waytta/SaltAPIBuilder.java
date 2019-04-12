@@ -2,6 +2,8 @@ package com.waytta;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.URI;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Collections;
 import java.util.logging.Level;
@@ -336,10 +338,17 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializ
             // only hook communications should start with an empty function object
             // publish event to salt event bus to /hook
             String myTag = Utils.paramorize(build, listener, getTag());
-            // Cleanup myTag to remove duplicate / and urlencode
+            // Cleanup myTag to remove duplicate / and sanitize url
             myTag = myTag.replaceAll("^/", "");
-            myTag = URLEncoder.encode(myTag, "UTF-8");
-            httpResponse = (JSONObject) JSONSerializer.toJSON(launcher.getChannel().call(new HttpCallable(serverName + "/hook/" + myTag, saltFunc, token)));
+            URL saltHookURL = new URL(serverName + "/hook/" + myTag);
+            URI saltHookURI = null;
+            try {
+                saltHookURI = new URI(saltHookURL.getProtocol(), saltHookURL.getUserInfo(), saltHookURL.getHost(), saltHookURL.getPort(), saltHookURL.getPath(), saltHookURL.getQuery(), saltHookURL.getRef());
+            } catch (java.net.URISyntaxException e) {
+                e.printStackTrace();
+                throw new RuntimeException("Could not create a correct URI");
+            }
+            httpResponse = (JSONObject) JSONSerializer.toJSON(launcher.getChannel().call(new HttpCallable(saltHookURI.toString(), saltFunc, token)));
             returnArray.add(httpResponse);
         } else if (saltFunc.get("client").equals("local_async")) {
             int jobPollTime = getJobPollTime();
