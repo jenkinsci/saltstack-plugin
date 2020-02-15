@@ -27,7 +27,7 @@ check the "Wait for completion" checkbox.
 
 `Salt syntax: "salt -N nodegroup webservers state.sls apache test=True"`
 
-![](img/local.png){width="900"}
+![](img/local.png)
 
 ### local\_batch
 
@@ -38,7 +38,7 @@ build until finished.
 
 `Salt syntax: "salt -b '25%' -N nodegroup webservers state.sls deploy.websites test=True"`
 
-![](img/local_batch.png){width="900"}
+![](img/local_batch.png)
 
 ### subset
 
@@ -49,7 +49,7 @@ always block the build until finished.
 
 `Salt syntax: salt --subset=4 '*' service.stop zabbix-agent`
 
-![](img/subset.png){width="900"}
+![](img/subset.png)
 
 ### runner
 
@@ -58,7 +58,7 @@ kick off salt orchestration jobs
 
 `Salt syntax: salt-run state.orchestrate orchestration.refresh-apache pillar='{"target":testserver1.domain.com}'`
 
-![](img/runner.png){width="900"}
+![](img/runner.png)
 
 ### hook
 
@@ -71,7 +71,7 @@ Curl syntax: curl -sS localhost:8000/hook/jenkins/notify/slack \
     -d '{"message": "Build ran"}'
 ```
 
-![](img/hook.png){width="900"}
+![](img/hook.png)
 
 ## Pipeline
 
@@ -97,7 +97,7 @@ render the input fields and requires some adjustments.
 
 #### Add a step "Send a message to the SaltAPI"
 
-![](img/blueocean.png){height="250"} 
+![](img/blueocean.png)
 
 | |  |
 |-----------------|--------------|
