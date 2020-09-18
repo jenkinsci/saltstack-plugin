@@ -158,7 +158,7 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializ
     public String getBatchSize() {
         return clientInterface.getBatchSize();
     }
-    
+
     public String getBatchWait() {
         return clientInterface.getBatchWait();
     }
@@ -216,12 +216,12 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializ
     public String getTag() {
         return clientInterface.getTag();
     }
-    
+
     @DataBoundSetter
     public void setSkipValidation(boolean skipValidation) {
         this.skipValidation = skipValidation;
     }
-    
+
     public boolean getSkipValidation() {
         return skipValidation;
     }
@@ -409,8 +409,9 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializ
             if(myMods != null && !myMods.trim().isEmpty()) {
                 saltFunc.put("mods", myMods);
             }
-            String myPillarvalue = Utils.paramorize(build, listener, getPillarvalue());
-            if (myPillarvalue.length() > 0) {
+            String myPillarvalue = getPillarvalue();
+            if (myPillarvalue != null && myPillarvalue.length() > 0) {
+                myPillarvalue = Utils.paramorize(build, listener, myPillarvalue);
                 // If value was already a jsonobject, treat it as such
                 JSON runPillarValue = JSONSerializer.toJSON(myPillarvalue);
                 saltFunc.put("pillar", runPillarValue);
@@ -538,7 +539,7 @@ public class SaltAPIBuilder extends Builder implements SimpleBuildStep, Serializ
 
             return FormValidation.warning("Cannot expand parametrized server name.");
         }
-        
+
         @RequirePOST
         public static ListBoxModel doFillCredentialsIdItems(
                 @AncestorInPath Job context,

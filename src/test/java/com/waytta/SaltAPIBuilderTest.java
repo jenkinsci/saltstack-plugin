@@ -279,4 +279,26 @@ public class SaltAPIBuilderTest {
                 function, arguments, "older", targettype);
         assertEquals(testObject, result);
     }
+
+    @Test
+    public void testRunnerClientNoPillarPrepareSaltFunction() throws Exception {
+        AbstractBuild jenkinsBuild = mock(AbstractBuild.class);
+        BuildListener buildListener = mock(BuildListener.class);
+        PrintStream printer = mock(PrintStream.class);
+        when(buildListener.getLogger()).thenReturn(printer);
+
+        RunnerClient client = new RunnerClient(function, arguments, mods, null);
+        String myClientInterface = "runner";
+        SaltAPIBuilder saltAPIBuilder = new SaltAPIBuilder("name", "pam", client, "creds");
+
+        JSONObject testObject = JSONObject.fromObject("{"
+                + "\"client\":\"runner\","
+                + "\"fun\":\"cmd.run\","
+                + "\"arg\":\"ls -la\""
+                + "}");
+
+        JSONObject result = saltAPIBuilder.prepareSaltFunction(jenkinsBuild, buildListener, myClientInterface, target,
+                function, arguments, "older", targettype);
+        assertEquals(testObject, result);
+    }
 }
